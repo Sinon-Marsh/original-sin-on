@@ -165,7 +165,7 @@ a{color:inherit}
       <option value="">Todos</option><option value="sel">Seleccionados</option><option value="norm">Solo normales</option><option value="negs">Solo negativos</option><option value="pendiente">Pendientes</option><option value="aprendiendo">Aprendiendo</option><option value="dominado">Dominados</option>
     </select>
   </div>
-  <div class="row oblOnly" style="margin-top:8px"><label class="ck"><input type="checkbox" id="negChk">Mostrar negativos</label><label class="ck"><input type="checkbox" id="pairChk">Seleccionar junto con su pareja x2</label></div>
+  <div class="row oblOnly" style="margin-top:8px"><label class="ck"><input type="checkbox" id="negChk">Mostrar negativos</label></div>
   <div class="row" style="margin-top:8px;justify-content:space-between">
     <div class="seg" role="group" aria-label="Al tocar un caso"><button data-mode="sel" class="on">Tocar: seleccionar</button><button data-mode="st">Tocar: cambiar estado</button></div>
     <div class="row"><button class="btn" id="selVis">Seleccionar visibles</button><button class="btn" id="unselVis">Quitar visibles</button></div>
@@ -178,7 +178,7 @@ a{color:inherit}
 
 <section id="drill">
   <div class="card scrCard">
-    <div class="c" id="flipNote" style="font-weight:600;color:var(--hold);display:none">Voltea el puzzle resuelto (x2, otro color arriba) y luego aplica:</div>
+    
     <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><div><div class="scr" id="scr">—</div>
     <div class="lbl c" id="poolInfo"></div></div></div>
   </div>
@@ -342,11 +342,10 @@ function openDet(id){const c=byId(id);if(!c)return;det=c;const u=ud(c.id),uo=ud(
   $('sheetIn').innerHTML=`<div class="dhead"><img alt="" src="${img(c)}"><div><h2 id="dName" style="font-size:30px;margin:0">${esc(c.n)}</h2><div class="lbl">${esc(S.cur)} · ${esc(c.g)}</div>
   <div class="lbl" style="margin-top:6px">Promedio ${f2(avg(u))} · Mejor ${f2(best(u))} · ${u.r.length} intentos</div></div></div>
   <label class="ck" style="margin-top:14px"><input type="checkbox" id="dSel"${u.sel?' checked':''}>Incluir en el drill</label>
-  ${(()=>{const p=pair(c);if(!p)return '';return p.id===c.id?`<p class="note" style="margin-top:12px">Con x2 se ve igual.</p>`:`<div class="row" style="margin-top:12px;gap:12px"><img alt="" src="${img(p)}" style="height:70px"><div style="flex:1"><div class="lbl">Con x2 se ve como</div><div class="big">${esc(p.n)}</div></div><button class="btn" data-dpair="${p.id}">Abrir</button></div>`})()}
   <h2 style="margin-top:16px">Estado</h2><div class="row">${ST.map(s=>`<button class="st ${s}${u.st===s?' on':''}" data-dst="${s}">${STL[s]}</button>`).join('')}</div>
   <h2 style="margin-top:16px">Mi algoritmo</h2>
   ${c.neg?`<p class="note">Mismos movimientos que ${esc(own(c).n)}: solo terminas con el otro color arriba. Tu elección se comparte con ese caso.</p>`:''}
-  ${c.a.map((a,i)=>`<label class="alg"><input type="radio" name="alg" value="${i}"${uo.ai===i?' checked':''}><span>${esc(a)}</span></label>`).join('')}
+  ${c.a.map((a,i)=>/^\[[^\]]*x2/.test(a)&&uo.ai!==i?'':`<label class="alg"><input type="radio" name="alg" value="${i}"${uo.ai===i?' checked':''}><span>${esc(a)}</span></label>`).join('')}
   <label class="alg"><input type="radio" name="alg" value="-1"${uo.ai===-1?' checked':''}><span style="flex:1">Propio<input type="text" id="dCa" value="${esc(uo.ca)}" placeholder="Escribe tu algoritmo" style="margin-top:6px"></span></label>
   <h2 style="margin-top:16px">Agarre</h2><p class="note">Posición de tus manos al empezar el algoritmo; la verás en el Drill.</p>
   <div class="seg" role="group" aria-label="Agarre">${[['','Sin marcar'],['u','(u)'],['d','(d)']].map(([v,l])=>`<button data-dgr="${v}" class="${(uo.gr||'')===v?'on':''}">${l}</button>`).join('')}</div>
@@ -406,7 +405,7 @@ function pick(){const p=pool();if(!p.length){cur=null;return}const cand=p.length
     let r=Math.random()*w.reduce((a,b)=>a+b,0);cur=cand[cand.length-1];for(let i=0;i<cand.length;i++){r-=w[i];if(r<=0){cur=cand[i];break}}}
   const pp=S.cur==='OBL'?pair(cur):null;curX2=!!pp&&pp.id!==cur.id&&false;
   curScr=scramble(curX2?pp:cur)}
-function showCase(){const p=pool();{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!cur;if(cur){$('grip').className='grip '+(g||'none');$('gripImg').src='assets/grip-'+(g||'none')+'.png';$('gripImg').alt=g==='u'?'Agarre u':g==='d'?'Agarre d':'Agarre sin marcar'}}const shown=cur?(curX2?pair(cur):cur):null;$('flipNote').style.display=shown&&shown.neg?'block':'none';$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
+function showCase(){const p=pool();{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!cur;if(cur){$('grip').className='grip '+(g||'none');$('gripImg').src='assets/grip-'+(g||'none')+'.png';$('gripImg').alt=g==='u'?'Agarre u':g==='d'?'Agarre d':'Agarre sin marcar'}}$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
 const pad=$('pad'),tEl=$('time');let state='idle',t0=0,raf=0,holdT=0,justStopped=false,lastRec=null;
 function tick(){tEl.textContent=((performance.now()-t0)/1000).toFixed(2);raf=requestAnimationFrame(tick)}
 function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast('No hay casos seleccionados');return}
@@ -457,10 +456,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
 $('selVis').onclick=()=>setSel(visible(),true);
 $('unselVis').onclick=()=>setSel(visible(),false);
 $('q').addEventListener('input',renderSelector);$('fst').addEventListener('change',renderSelector);
-$('smart').checked=S.smart;$('negChk').checked=S.showNeg!==false;$('pairChk').checked=!!S.pairSel;S.x2=S.x2||'off';
+$('smart').checked=S.smart;$('negChk').checked=S.showNeg!==false;S.pairSel=false;S.x2=S.x2||'off';
 document.querySelectorAll('[data-x2]').forEach(x=>x.classList.toggle('on',x.dataset.x2===S.x2));
 $('negChk').onchange=e=>{S.showNeg=e.target.checked;save();renderSelector()};
-$('pairChk').onchange=e=>{S.pairSel=e.target.checked;save()};
+
 $('skipDom').checked=S.skipDom;
 $('smart').onchange=e=>{S.smart=e.target.checked;save()};
 $('skipDom').onchange=e=>{S.skipDom=e.target.checked;save();pick();showCase()};
@@ -515,7 +514,7 @@ async function sync(){if(!gh.token||!gh.repo){syncMsg('Sin configurar: tu progre
   if(syncing)return;syncing=true;clearTimeout(pushT);syncMsg('Sincronizando…');
   try{for(let i=0;i<3;i++){const f=await getFile('progress.json');const changed=f.data?mergeRemote(f.data):false;
       if(changed){for(const k of SETS)for(const [id,u] of Object.entries(S.u[k])){localCache[ckey(k,id)]=JSON.stringify(strip(u))}metaL=metaOf();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-        $('smart').checked=S.smart;$('skipDom').checked=S.skipDom;$('negChk').checked=S.showNeg!==false;$('pairChk').checked=!!S.pairSel;
+        $('smart').checked=S.smart;$('skipDom').checked=S.skipDom;$('negChk').checked=S.showNeg!==false;
         document.querySelectorAll('[data-x2]').forEach(x=>x.classList.toggle('on',x.dataset.x2===(S.x2||'off')));await switchSet(S.cur)}
       stampLocal();const out=buildRemote();const same=f.data&&JSON.stringify({meta:f.data.meta,u:f.data.u})===JSON.stringify({meta:out.meta,u:out.u});
       if(same)break;try{await putFile('progress.json',out,f.sha,'Progreso '+new Date().toISOString());break}catch(e){if(e.conflict&&i<2)continue;throw e}}
@@ -549,7 +548,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>sync());
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v6 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v7 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
