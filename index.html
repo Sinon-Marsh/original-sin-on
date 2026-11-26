@@ -65,6 +65,7 @@ section{display:none}section.on{display:block}
 #pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
 #pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
 #last{display:none}
+#selector.fclean .modeRow,#selector.fclean .gbody>.row,#selector.fclean #selInfo{display:none}
 body:has(#drill.on) header{padding-top:10px}
 body:has(#drill.on) header .logo,body:has(#drill.on) header .vine,body:has(#drill.on) header .sub{display:none}
 body:has(#drill.on) h1{font-size:24px}
@@ -172,7 +173,7 @@ a{color:inherit}
     </select>
   </div>
   <div class="row oblOnly" style="margin-top:8px"><label class="ck"><input type="checkbox" id="negChk">Mostrar negativos</label></div>
-  <div class="row" style="margin-top:8px;justify-content:space-between">
+  <div class="row modeRow" style="margin-top:8px;justify-content:space-between">
     <div class="seg" role="group" aria-label="Al tocar un caso"><button data-mode="sel" class="on">Tocar: seleccionar</button><button data-mode="st">Tocar: cambiar estado</button></div>
     <div class="row"><button class="btn" id="selVis">Seleccionar visibles</button><button class="btn" id="unselVis">Quitar visibles</button></div>
   </div>
@@ -339,12 +340,12 @@ function renderChips(){document.querySelectorAll('.oblOnly').forEach(el=>el.styl
 
 /* ---- selector ---- */
 let mode='sel';
-function visible(){const q=$('q').value.trim().toLowerCase(),f=$('fst').value,FF=f.startsWith('f:')?fById(f.slice(2)):null;return cases().filter(c=>{const u=peek(c.id);if(FF&&!inF(FF,c))return false;if(q&&!c.n.toLowerCase().includes(q)&&!c.g.toLowerCase().includes(q))return false;if(c.neg&&S.showNeg===false)return false;if(f==='sel')return u.sel;if(f==='norm')return !c.neg;if(f==='negs')return !!c.neg;if(f&&!FF)return u.st===f;return true})}
+function visible(){const q=$('q').value.trim().toLowerCase(),f=$('fst').value,FF=f.startsWith('f:')?fById(f.slice(2)):null;return cases().filter(c=>{const u=peek(c.id);if(editF&&!folderEdit&&!inF(editF,c))return false;if(FF&&!inF(FF,c))return false;if(q&&!c.n.toLowerCase().includes(q)&&!c.g.toLowerCase().includes(q))return false;if(c.neg&&S.showNeg===false)return false;if(f==='sel')return u.sel;if(f==='norm')return !c.neg;if(f==='negs')return !!c.neg;if(f&&!FF)return u.st===f;return true})}
 function tileHTML(c){const u=peek(c.id);return `<div class="tile${(editF?inF(editF,c):u.sel)?' sel':''}${c.neg?' neg':''}" data-tile="${c.id}"><span class="ck2">✦</span><button class="tg" data-tg="${c.id}"><img loading="lazy" alt="" src="${img(c)}"><span class="nm">${esc(c.n)}</span></button><button class="inf" data-inf="${c.id}" aria-label="Detalles de ${esc(c.n)}">i</button><div class="bar ${u.st}"></div></div>`}
 function renderSelector(){const vis=visible(),groups=[];vis.forEach(c=>{let g=groups.find(x=>x.n===c.g);if(!g)groups.push(g={n:c.g,cs:[]});g.cs.push(c)});
   const filtered=$('q').value.trim()||$('fst').value, openAll=filtered||S.cur==='OBL';
   $('groups').innerHTML=groups.length?groups.map((g,i)=>{const ns=g.cs.filter(c=>editF?inF(editF,c):peek(c.id).sel).length;const op=openAll||openG.has(g.n);
-    return `<details class="grp" data-g="${esc(g.n)}"${op?' open':''}><summary>${esc(g.n)} <span class="lbl gcount">${g.cs.length} casos · ${ns} ${editF?'en la carpeta':'seleccionados'}</span></summary><div class="gbody"><div class="row"><button class="btn" data-gall="${esc(g.n)}">Seleccionar grupo</button><button class="btn" data-gnone="${esc(g.n)}">Quitar grupo</button></div><div class="grid">${op?g.cs.map(tileHTML).join(''):''}</div></div></details>`}).join(''):'<div class="empty">Ningún caso coincide.</div>';
+    return `<details class="grp" data-g="${esc(g.n)}"${op?' open':''}><summary>${esc(g.n)} <span class="lbl gcount">${g.cs.length} casos · ${ns} ${editF?'en la carpeta':'seleccionados'}</span></summary><div class="gbody"><div class="row"><button class="btn" data-gall="${esc(g.n)}">Seleccionar grupo</button><button class="btn" data-gnone="${esc(g.n)}">Quitar grupo</button></div><div class="grid">${op?g.cs.map(tileHTML).join(''):''}</div></div></details>`}).join(''):(editF&&!folderEdit&&!fMembers(editF).length?'<div class="empty">Esta carpeta está vacía. Toca «Agregar o quitar casos».</div>':'<div class="empty">Ningún caso coincide.</div>');
   updInfo();renderFbar()}
 function updCounts(){const vis=visible();document.querySelectorAll('details.grp').forEach(d=>{const cs=vis.filter(c=>c.g===d.dataset.g),ns=cs.filter(c=>editF?inF(editF,c):peek(c.id).sel).length,el=d.querySelector('.gcount');if(el)el.textContent=`${cs.length} casos · ${ns} ${editF?'en la carpeta':'seleccionados'}`})}
 function updInfo(){updCounts();const all=cases();$('selInfo').textContent=editF?`${fMembers(editF).length} casos en la carpeta «${editF.name}»`:`${all.filter(c=>peek(c.id).sel).length} de ${all.length} casos seleccionados para el drill`}
@@ -392,9 +393,11 @@ $('practice').onchange=e=>{S.af[S.cur]=e.target.value||null;editF=activeF();save
 async function refreshFolders(){renderFolders();const need=[...new Set(S.folders.map(f=>f.set))].filter(k=>!D[k]);if(need.length){await Promise.all(need.map(load));renderFolders()}}
 function renderFolders(){const fc=$('fchips');if(!fc)return;const fs=S.folders.filter(f=>f.set===S.cur);
   fc.innerHTML=`<button class="chip${editF?'':' on'}" data-fgo="">Mi selección</button>`+fs.map(f=>`<button class="chip${editF===f?' on':''}" data-fgo="${esc(f.id)}">${esc(f.name)} · ${D[f.set]?fMembers(f).length:'…'}</button>`).join('')+`<button class="chip" id="newF">+ Nueva carpeta</button>`}
-function enterFolder(f){editF=f||null;S.af[S.cur]=f?f.id:null;save();mode='sel';document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x.dataset.mode==='sel'));renderSelector();renderPractice();pick();showCase();renderStats()}
+let folderEdit=false;
+function enterFolder(f){editF=f||null;folderEdit=false;S.af[S.cur]=f?f.id:null;save();mode='sel';document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x.dataset.mode==='sel'));renderSelector();renderPractice();pick();showCase();renderStats()}
 async function practiceF(id){const f=fById(id);if(!f)return;if(S.cur!==f.set){lastRec=null;$('last').style.display='none';await switchSet(f.set)}S.af[f.set]=f.id;save();renderPractice();pick();showCase();renderStats();goTab('drill')}
-function openFolder(f,isNew){fed={o:f,isNew,d:{...f,ids:[...(f.ids||[])],ex:[...(f.ex||[])]},del:false};const d=fed.d;
+const selIds=k=>Object.entries(S.u[k]||{}).filter(([,u])=>u.sel).map(([id])=>+id);
+function openFolder(f,isNew){fed={o:f,isNew,d:{...f,ids:[...(f.ids||[])],ex:[...(f.ex||[])]},del:false};const d=fed.d;if(isNew&&!d.ids.length)d.ids=selIds(d.set);
   $('sheetIn').innerHTML=`<h2 id="dName" style="font-size:30px;margin:0 0 10px">${isNew?'Nueva carpeta':'Editar carpeta'}</h2>
   <label class="lbl" for="fName">Nombre</label><input type="text" id="fName" value="${esc(d.name)}" placeholder="Birds">
   <div class="lbl" style="margin-top:12px">Set</div><div class="seg" style="max-width:240px">${SETS.map(k=>`<button data-fset="${k}" class="${d.set===k?'on':''}">${k}</button>`).join('')}</div>
@@ -402,17 +405,17 @@ function openFolder(f,isNew){fed={o:f,isNew,d:{...f,ids:[...(f.ids||[])],ex:[...
   <div class="row" style="margin-top:14px"><button class="btn pri" data-fsave>Guardar</button>${isNew?'':'<button class="btn bad" data-fdel>Eliminar</button>'}<button class="btn" data-fcancel>Cancelar</button></div>`;
   $('sheet').classList.add('on');$('sheetIn').scrollTop=0;fPrev();if(isNew)$('fName').focus({preventScroll:true})}
 async function fPrev(){const d=fed&&fed.d;if(!d)return;if(!D[d.set])await load(d.set);if(!fed||fed.d!==d)return;const m=fMembers(d);
-  $('fPrev').innerHTML=`<div class="lbl">${m.length} casos${d.ids.length?` · ${d.ids.length} agregados a mano`:''}${d.ex.length?` · ${d.ex.length} quitados a mano`:''}</div><div class="row" style="gap:6px;margin-top:6px">${m.slice(0,24).map(c=>`<img alt="" title="${esc(c.n)}" src="${img(c)}" style="height:46px">`).join('')}${m.length>24?'<span class="lbl">…</span>':''}</div>`}
+  $('fPrev').innerHTML=`${fed.isNew?`<p class="note" style="margin:0 0 6px">${m.length?'Se crea con los casos que tienes seleccionados en «Mi selección».':'No tienes casos seleccionados en «Mi selección»: se creará vacía.'} Después puedes agregar o quitar.</p>`:''}<div class="lbl">${m.length} casos${d.ids.length?` · ${d.ids.length} agregados a mano`:''}${d.ex.length?` · ${d.ex.length} quitados a mano`:''}</div><div class="row" style="gap:6px;margin-top:6px">${m.slice(0,24).map(c=>`<img alt="" title="${esc(c.n)}" src="${img(c)}" style="height:46px">`).join('')}${m.length>24?'<span class="lbl">…</span>':''}</div>`}
 function closeFolder(){fed=null;$('sheet').classList.remove('on')}
 function commitFolder(){const d=fed.d;d.name=$('fName').value.trim()||'Sin nombre';d.q='';
   if(fed.isNew)S.folders.push(d);else{const o=fed.o;if(o.set!==d.set&&S.af[o.set]===o.id)S.af[o.set]=null;Object.assign(o,d)}save();const f=fed.isNew?d:fed.o;closeFolder();renderFolders();renderPractice();if(activeF()===f){pick();showCase();renderStats()}return f}
 async function folderClick(e){if(e.target.id==='sheet'||e.target.closest('[data-fcancel]'))return closeFolder();const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.fset){if(fed.d.set!==b.dataset.fset){fed.d.set=b.dataset.fset;fed.d.ids=[];fed.d.ex=[]}$('sheetIn').querySelectorAll('[data-fset]').forEach(x=>x.classList.toggle('on',x===b));fPrev();return}
+  if(b.dataset.fset){if(fed.d.set!==b.dataset.fset){fed.d.set=b.dataset.fset;fed.d.ids=fed.isNew?selIds(fed.d.set):[];fed.d.ex=[]}$('sheetIn').querySelectorAll('[data-fset]').forEach(x=>x.classList.toggle('on',x===b));fPrev();return}
   if(b.hasAttribute('data-fsave')){const f=commitFolder();toast('Carpeta guardada');if(S.cur!==f.set)await switchSet(f.set);enterFolder(f);return}
   if(b.hasAttribute('data-fpick')){const f=commitFolder();if(S.cur!==f.set)await switchSet(f.set);editF=f;mode='sel';document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x.dataset.mode==='sel'));goTab('selector');renderSelector();window.scrollTo(0,0);return}
   if(b.hasAttribute('data-fdel')){if(!fed.del){fed.del=true;b.textContent='¿Seguro? Toca otra vez';return}const o=fed.o;S.folders=S.folders.filter(f=>f!==o);SETS.forEach(k=>{if(S.af[k]===o.id)S.af[k]=null});if(editF===o)editF=null;save();closeFolder();renderSelector();renderPractice();pick();showCase();renderStats();toast('Carpeta eliminada')}}
 $('sheet').addEventListener('input',e=>{if(!fed)return;if(e.target.id==='fQ'){fed.d.q=e.target.value;fPrev()}});
-function renderFbar(){renderFolders();const fb=$('fbar');fb.hidden=!editF;if(!editF)return;fb.innerHTML=`<div class="row" style="justify-content:space-between"><div style="flex:1;min-width:10em"><div class="big">${esc(editF.name)}</div><div class="lbl">${(n=>n+(n===1?' caso':' casos'))(fMembers(editF).length)} · toca un caso para agregarlo o quitarlo${editF.q?` · incluye “${esc(editF.q)}”`:''}</div></div><div class="row"><button class="btn" id="fEdit">Ajustes</button><button class="btn pri" id="fPlay">Practicar</button></div></div>`}
+function renderFbar(){renderFolders();$('selector').classList.toggle('fclean',!!editF&&!folderEdit);const fb=$('fbar');fb.hidden=!editF;if(!editF)return;fb.innerHTML=`<div class="row" style="justify-content:space-between"><div style="flex:1;min-width:10em"><div class="big">${esc(editF.name)}</div><div class="lbl">${(n=>n+(n===1?' caso':' casos'))(fMembers(editF).length)}${folderEdit?' · toca casos para agregarlos o quitarlos':''}</div></div><div class="row"><button class="btn${folderEdit?' pri':''}" id="fToggle">${folderEdit?'Listo':'Agregar o quitar casos'}</button><button class="btn" id="fEdit">Ajustes</button>${folderEdit?'':'<button class="btn pri" id="fPlay">Practicar</button>'}</div></div>`}
 
 /* ---- drill ---- */
 let cur=null,curScr='',lastId=null,curX2=false;
@@ -458,12 +461,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.dataset.fprac){practiceF(b.dataset.fprac);return}
   if(b.dataset.fedit){const f=fById(b.dataset.fedit);if(f)openFolder(f);return}
   if(b.dataset.fgo!==undefined){enterFolder(b.dataset.fgo?fById(b.dataset.fgo):null);return}
+  if(b.id==='fToggle'&&editF){folderEdit=!folderEdit;renderSelector();return}
   if(b.id==='fEdit'&&editF){openFolder(editF,false);return}
   if(b.id==='fPlay'){goTab('drill');window.scrollTo(0,0);return}
   if(b.id==='newF'){openFolder({id:'f'+Date.now().toString(36),name:'',set:S.cur,q:'',ids:[],ex:[],noNeg:false},true);return}
   if(b.dataset.set){if(b.dataset.set!==S.cur){lastRec=null;$('last').style.display='none';switchSet(b.dataset.set)}return}
   if(b.dataset.x2){S.x2=b.dataset.x2;save();document.querySelectorAll('[data-x2]').forEach(x=>x.classList.toggle('on',x===b));pick();showCase();return}
   if(b.dataset.mode){mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));return}
+  if(b.dataset.tg&&editF&&!folderEdit&&mode==='sel'){openDet(b.dataset.tg);return}
   if(b.dataset.tg&&editF&&mode==='sel'){toggleF(editF,byId(b.dataset.tg));save();refreshTile(b.dataset.tg);updInfo();renderFbar();if(activeF()===editF){pick();showCase()}return}
   if(b.dataset.tg){const u=ud(b.dataset.tg);if(mode==='sel'){u.sel=!u.sel;const p=S.pairSel&&S.cur==='OBL'?pair(byId(b.dataset.tg)):null;if(p&&p.id!==+b.dataset.tg){ud(p.id).sel=u.sel;refreshTile(p.id)}}else u.st=ST[(ST.indexOf(u.st)+1)%3];save();refreshTile(b.dataset.tg);
     if(mode==='sel'){updInfo();if(!cur||!pool().includes(cur)){pick();showCase()}else showCase()}else toast(STL[u.st]);renderStats();return}
@@ -598,7 +603,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v12 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v13 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
