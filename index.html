@@ -66,7 +66,6 @@ section{display:none}section.on{display:block}
 #last{display:none}
 .scrRow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
 .grip{width:76px;text-align:center}.grip img{display:block;width:76px;height:76px;border:1px solid var(--line);border-radius:4px}
-.grip span{display:block;font:italic 500 18px 'Cormorant Garamond',serif;margin-top:2px}
 .grip.u img{box-shadow:0 0 18px -4px var(--halo)}
 .lastgrid{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
 .lastgrid img{height:96px}
@@ -177,7 +176,7 @@ a{color:inherit}
   <p class="note">y2 ya va incluido: cada scramble agrega giros aleatorios de 90° y 180° en ambas capas.</p>
   <div class="card">
     <div class="lbl c">Scramble</div><div class="c" id="flipNote" style="font-weight:600;color:var(--hold);display:none">Voltea el puzzle resuelto (x2, otro color arriba) y luego aplica:</div>
-    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""><span id="gripTxt"></span></div><div><div class="scr" id="scr">—</div>
+    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><div><div class="scr" id="scr">—</div>
     <div class="lbl c" id="poolInfo"></div></div></div>
   </div>
   <div id="pad" role="button" tabindex="0" aria-label="Cronómetro: mantén presionado y suelta para iniciar, toca para detener">
@@ -399,7 +398,7 @@ function pick(){const p=pool();if(!p.length){cur=null;return}const cand=p.length
     let r=Math.random()*w.reduce((a,b)=>a+b,0);cur=cand[cand.length-1];for(let i=0;i<cand.length;i++){r-=w[i];if(r<=0){cur=cand[i];break}}}
   const pp=S.cur==='OBL'?pair(cur):null;curX2=!!pp&&pp.id!==cur.id&&(S.x2==='only'||(S.x2==='mix'&&Math.random()<.5));
   curScr=scramble(curX2?pp:cur)}
-function showCase(){const p=pool();{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!g;if(g){$('grip').className='grip '+g;$('gripImg').src='assets/grip-'+g+'.png';$('gripImg').alt=g==='u'?'Agarre u':'Agarre d';$('gripTxt').textContent='('+g+')'}}const shown=cur?(curX2?pair(cur):cur):null;$('flipNote').style.display=shown&&shown.neg?'block':'none';$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
+function showCase(){const p=pool();{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!cur;if(cur){$('grip').className='grip '+(g||'none');$('gripImg').src='assets/grip-'+(g||'none')+'.png';$('gripImg').alt=g==='u'?'Agarre u':g==='d'?'Agarre d':'Agarre sin marcar'}}const shown=cur?(curX2?pair(cur):cur):null;$('flipNote').style.display=shown&&shown.neg?'block':'none';$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
 const pad=$('pad'),tEl=$('time');let state='idle',t0=0,raf=0,holdT=0,justStopped=false,lastRec=null;
 function tick(){tEl.textContent=((performance.now()-t0)/1000).toFixed(2);raf=requestAnimationFrame(tick)}
 function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast('No hay casos seleccionados');return}
@@ -542,7 +541,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>sync());
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v3 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v4 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
