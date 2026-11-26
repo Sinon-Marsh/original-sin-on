@@ -69,7 +69,10 @@ body:has(#drill.on) header{padding-top:10px}
 body:has(#drill.on) header .logo,body:has(#drill.on) header .vine,body:has(#drill.on) header .sub{display:none}
 body:has(#drill.on) h1{font-size:24px}
 body:has(#drill.on) nav{padding-top:8px;padding-bottom:10px}
-.scrCard{margin-top:0;padding:12px 14px}.scrCard .scr{margin:0 0 2px;text-align:left}.scrCard .lbl.c{text-align:left}
+.scrCard{margin-top:0;padding:12px 14px}.scrCard .scrRow{grid-template-columns:auto auto minmax(0,1fr);gap:12px}
+.curImg{height:76px;width:auto;display:block}.curName{font:italic 500 21px/1.1 'Cormorant Garamond',serif;margin-bottom:4px;overflow-wrap:anywhere}
+.scrCard .scr{font-size:clamp(17px,4.4vw,24px)}
+.scrCard .grip,.scrCard .grip img{width:64px}.scrCard .grip img{height:64px}.scrCard .scr{margin:0 0 2px;text-align:left}.scrCard .lbl.c{text-align:left}
 details.drillSet{margin-top:14px}details.drillSet summary{cursor:pointer;font:italic 500 20px 'Cormorant Garamond',serif;list-style:none}details.drillSet summary::-webkit-details-marker{display:none}
 details.drillSet summary::before{content:"✝ ";font-style:normal;font-size:13px;color:var(--mute)}details.drillSet[open] summary{margin-bottom:10px}
 .scrRow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
@@ -179,8 +182,7 @@ a{color:inherit}
 <section id="drill">
   <div class="card scrCard">
     
-    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><div><div class="scr" id="scr">—</div>
-    <div class="lbl c" id="poolInfo"></div></div></div>
+    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><img id="curImg" class="curImg" alt="" hidden><div><div class="curName" id="curName"></div><div class="scr" id="scr">—</div></div></div>
   </div>
   <div id="pad" role="button" tabindex="0" aria-label="Cronómetro: mantén presionado y suelta para iniciar, toca para detener">
     <div id="time">0.00</div>
@@ -201,6 +203,7 @@ a{color:inherit}
   </div>
   <details class="card drillSet">
     <summary>Ajustes del drill</summary>
+    <p class="note" id="poolInfo" style="margin:0 0 10px"></p>
   <div class="row setChips"></div>
   <div class="row" style="margin-top:8px"><label class="lbl" for="practice">Practicar</label><select id="practice" style="flex:1;width:auto"></select></div>
   <div class="row" style="margin-top:8px"><label class="ck"><input type="checkbox" id="smart">Repaso inteligente</label><label class="ck"><input type="checkbox" id="skipDom">Excluir dominados</label></div>
@@ -405,7 +408,7 @@ function pick(){const p=pool();if(!p.length){cur=null;return}const cand=p.length
     let r=Math.random()*w.reduce((a,b)=>a+b,0);cur=cand[cand.length-1];for(let i=0;i<cand.length;i++){r-=w[i];if(r<=0){cur=cand[i];break}}}
   const pp=S.cur==='OBL'?pair(cur):null;curX2=!!pp&&pp.id!==cur.id&&false;
   curScr=scramble(curX2?pp:cur)}
-function showCase(){const p=pool();{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!cur;if(cur){$('grip').className='grip '+(g||'none');$('gripImg').src='assets/grip-'+(g||'none')+'.png';$('gripImg').alt=g==='u'?'Agarre u':g==='d'?'Agarre d':'Agarre sin marcar'}}$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
+function showCase(){const p=pool();$('curImg').hidden=!cur;if(cur){$('curImg').src=img(cur)}$('curName').textContent=cur?cur.n:'Sin casos: elige casos en el Selector';{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!cur;if(cur){$('grip').className='grip '+(g||'none');$('gripImg').src='assets/grip-'+(g||'none')+'.png';$('gripImg').alt=g==='u'?'Agarre u':g==='d'?'Agarre d':'Agarre sin marcar'}}$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
 const pad=$('pad'),tEl=$('time');let state='idle',t0=0,raf=0,holdT=0,justStopped=false,lastRec=null;
 function tick(){tEl.textContent=((performance.now()-t0)/1000).toFixed(2);raf=requestAnimationFrame(tick)}
 function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast('No hay casos seleccionados');return}
@@ -548,7 +551,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>sync());
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v8 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v9 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
