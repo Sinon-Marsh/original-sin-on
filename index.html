@@ -69,6 +69,9 @@ body:has(#drill.on) header{padding-top:10px}
 body:has(#drill.on) header .logo,body:has(#drill.on) header .vine,body:has(#drill.on) header .sub{display:none}
 body:has(#drill.on) h1{font-size:24px}
 body:has(#drill.on) nav{padding-top:8px;padding-bottom:10px}
+.algPeek{display:block;margin-top:6px;padding:6px 0;min-height:32px;border:0;background:none;color:var(--mute);font:italic 500 17px 'Cormorant Garamond',serif;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.algPeek.on{color:var(--ink);font:500 15px Inter,sans-serif;font-style:normal}
+.promo{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:0 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line);font-size:14px}
 .scrCard{margin-top:0;padding:12px 14px}.scrCard .scrRow{grid-template-columns:auto auto minmax(0,1fr);gap:12px}
 .curImg{height:76px;width:auto;display:block}.curName{font:italic 500 21px/1.1 'Cormorant Garamond',serif;margin-bottom:4px;overflow-wrap:anywhere}
 .scrCard .scr{font-size:clamp(17px,4.4vw,24px)}
@@ -182,13 +185,14 @@ a{color:inherit}
 <section id="drill">
   <div class="card scrCard">
     
-    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><img id="curImg" class="curImg" alt="" hidden><div><div class="curName" id="curName"></div><div class="scr" id="scr">—</div></div></div>
+    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><img id="curImg" class="curImg" alt="" hidden><div><div class="curName" id="curName"></div><div class="scr" id="scr">—</div><button class="algPeek" id="algPeek" type="button">Ver algoritmo</button></div></div>
   </div>
   <div id="pad" role="button" tabindex="0" aria-label="Cronómetro: mantén presionado y suelta para iniciar, toca para detener">
     <div id="time">0.00</div>
     <div class="hint" id="hint">Mantén presionado y suelta para iniciar</div>
   </div>
   <div class="card" id="last">
+    <div class="promo" id="promo" hidden><span id="promoTxt"></span><button class="btn pri" id="promoBtn">Marcar como dominado</button></div>
     <div class="lastgrid">
       <img id="lastImg" alt="">
       <div><div class="big" id="lastName"></div><div class="lbl" id="lastAlg" style="font:500 15px Inter,sans-serif;overflow-wrap:anywhere"></div></div>
@@ -206,7 +210,7 @@ a{color:inherit}
     <p class="note" id="poolInfo" style="margin:0 0 10px"></p>
   <div class="row setChips"></div>
   <div class="row" style="margin-top:8px"><label class="lbl" for="practice">Practicar</label><select id="practice" style="flex:1;width:auto"></select></div>
-  <div class="row" style="margin-top:8px"><label class="ck"><input type="checkbox" id="smart">Repaso inteligente</label><label class="ck"><input type="checkbox" id="skipDom">Excluir dominados</label></div>
+  <div class="row" style="margin-top:8px"><label class="ck"><input type="checkbox" id="smart">Repaso inteligente</label><label class="ck"><input type="checkbox" id="skipDom">Excluir dominados</label><label class="ck"><input type="checkbox" id="alwaysAlg">Mostrar siempre el algoritmo</label></div>
   </details>
 </section>
 
@@ -217,6 +221,16 @@ a{color:inherit}
 </section>
 
 <section id="coach">
+  <div class="card" id="learnCard">
+    <h2>Aprendizaje</h2>
+    <p class="note" id="learnSum">Configura de qué carpeta aprender y cuántos casos nuevos por día.</p>
+    <div class="tools" style="grid-template-columns:minmax(0,1fr) minmax(0,7em)">
+      <label class="lbl">Aprender de<select id="learnSrc" style="margin-top:4px"></select></label>
+      <label class="lbl">Nuevos por día<input type="number" id="learnN" min="1" max="12" style="margin-top:4px;width:100%;font:16px Inter,sans-serif;padding:10px 12px;border-radius:4px;border:1px solid var(--line);background:transparent;color:var(--ink);min-height:44px"></label>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn pri" id="learnGo">Empezar plan de hoy</button><button class="btn" id="learnMore">+2 nuevos hoy</button></div>
+    <p class="note">Cada caso nuevo entra como “Aprendiendo”. Si lo resuelves limpio y sin ver el algoritmo, vuelve en 1, 2, 4 y 8 días; si fallas, se repite hoy. Tras tres repasos limpios espaciados, la app te sugiere marcarlo como dominado.</p>
+  </div>
   <div class="card">
     <h2 id="planTitle">Plan del coach</h2>
     <div id="planBox" class="empty">Todavía no hay un plan. Pídeme uno en el chat de Claude y aparecerá aquí.</div>
@@ -286,7 +300,7 @@ if(!S||!S.u)S={cur:'OBL',smart:true,skipDom:false,u:{}};
 S.folders=S.folders||[];S.af=S.af||{};
 SETS.forEach(k=>S.u[k]=S.u[k]||{});
 let db=null,pushT=0,pushing=false,pushAgain=false;const syncCache={},localCache={};let meta0=null,metaL=null;
-let gh={};try{gh=JSON.parse(localStorage.getItem('sq1trainer.gh'))||{}}catch(e){}
+let peeked=false;let gh={};try{gh=JSON.parse(localStorage.getItem('sq1trainer.gh'))||{}}catch(e){}
 const save=()=>{stampLocal();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};schedulePush()};
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1800)};
 const D={}, IMG={};
@@ -320,7 +334,7 @@ const negSvg=v=>v.replace(/#222/g,'@@').replace(/#fafafa/g,'#222').replace(/@@/g
 async function load(k){if(D[k])return;try{const r=await fetch(SRC[k]);let d=await r.json();
   if(k==='OBL'){const out=[];d.forEach(c=>{out.push(c);if(!c.ident)out.push({id:-c.id,n:c.n+' (neg)',g:c.g,a:c.a,s:c.ns,v:negSvg(c.v),x:c.nx,neg:true,base:c})});d=out}
   d.forEach(c=>c._k=k);D[k]=d;let mig=false;(S.folders||[]).forEach(f=>{if(f.set===k&&f.q){f.ids=fMembers(f).map(c=>c.id);f.ex=[];f.q='';mig=true}});if(mig)save()}catch(e){D[k]=null}}
-async function switchSet(k){S.cur=k;save();renderChips();renderPractice();$('groups').innerHTML='<div class="empty">Cargando casos…</div>';await load(k);if(!D[k]){$('groups').innerHTML='<div class="empty">No se pudieron cargar los casos.</div>';return}editF=activeF();pick();renderSelector();renderStats();showCase()}
+async function switchSet(k){S.cur=k;save();renderChips();renderPractice();$('groups').innerHTML='<div class="empty">Cargando casos…</div>';await load(k);if(!D[k]){$('groups').innerHTML='<div class="empty">No se pudieron cargar los casos.</div>';return}editF=activeF();ensureToday();pick();renderSelector();renderStats();showCase();renderLearn()}
 function renderChips(){document.querySelectorAll('.oblOnly').forEach(el=>el.style.display=S.cur==='OBL'?'':'none');document.querySelectorAll('.setChips').forEach(el=>el.innerHTML=SETS.map(k=>`<button class="chip${S.cur===k?' on':''}" data-set="${k}">${k}</button>`).join(''))}
 
 /* ---- selector ---- */
@@ -371,7 +385,7 @@ function setF(f,c,v){if(inF(f,c)!==v)toggleF(f,c)}
 function activeF(){const f=fById(S.af[S.cur]);return f&&f.set===S.cur?f:null}
 function goTab(t){const b=document.querySelector(`nav [data-tab="${t}"]`);if(b)b.click()}
 function renderPractice(){const sel=$('practice');if(!sel)return;const fs=S.folders.filter(f=>f.set===S.cur);
-  sel.innerHTML=`<option value="">Mi selección</option>`+fs.map(f=>`<option value="${esc(f.id)}">Carpeta: ${esc(f.name)}</option>`).join('');sel.value=activeF()?S.af[S.cur]:'';
+  sel.innerHTML=`<option value="">Mi selección</option><option value="__today">Plan de hoy</option>`+fs.map(f=>`<option value="${esc(f.id)}">Carpeta: ${esc(f.name)}</option>`).join('');sel.value=isToday()?'__today':activeF()?S.af[S.cur]:'';
   const fst=$('fst'),v=fst.value;fst.querySelectorAll('option[data-f]').forEach(o=>o.remove());fs.forEach(f=>{const o=document.createElement('option');o.value='f:'+f.id;o.dataset.f=1;o.textContent='Carpeta: '+f.name;fst.appendChild(o)});fst.value=[...fst.options].some(o=>o.value===v)?v:''}
 $('practice').onchange=e=>{S.af[S.cur]=e.target.value||null;editF=activeF();save();renderSelector();pick();showCase();renderStats()};
 async function refreshFolders(){renderFolders();const need=[...new Set(S.folders.map(f=>f.set))].filter(k=>!D[k]);if(need.length){await Promise.all(need.map(load));renderFolders()}}
@@ -401,14 +415,14 @@ function renderFbar(){renderFolders();const fb=$('fbar');fb.hidden=!editF;if(!ed
 
 /* ---- drill ---- */
 let cur=null,curScr='',lastId=null,curX2=false;
-function pool(){const F=activeF();return cases().filter(c=>{const u=peek(c.id);return (F?inF(F,c):u.sel)&&!(S.skipDom&&u.st==='dominado')})}
+function pool(){if(isToday()){const t=today();return cases().filter(c=>{const u=peek(c.id);return u.lv!=null&&u.due<=t&&u.st!=='dominado'})}const F=activeF();return cases().filter(c=>{const u=peek(c.id);return (F?inF(F,c):u.sel)&&!(S.skipDom&&u.st==='dominado')})}
 function pick(){const p=pool();if(!p.length){cur=null;return}const cand=p.length>1?p.filter(c=>c.id!==lastId):p;
   if(!S.smart){cur=rnd(cand)}else{const av=p.map(c=>avg(peek(c.id))).filter(x=>x!=null),mean=av.length?av.reduce((a,b)=>a+b,0)/av.length:0;
     const w=cand.map(c=>{const u=peek(c.id),sw={pendiente:2,aprendiendo:3,dominado:1}[u.st],a=avg(u);const slow=a==null||!mean?1.6:Math.min(3,Math.max(.5,a/mean));return sw*slow*(1+2*failRate(u))});
     let r=Math.random()*w.reduce((a,b)=>a+b,0);cur=cand[cand.length-1];for(let i=0;i<cand.length;i++){r-=w[i];if(r<=0){cur=cand[i];break}}}
   const pp=S.cur==='OBL'?pair(cur):null;curX2=!!pp&&pp.id!==cur.id&&false;
   curScr=scramble(curX2?pp:cur)}
-function showCase(){const p=pool();$('curImg').hidden=!cur;if(cur){$('curImg').src=img(cur)}$('curName').textContent=cur?cur.n:'Sin casos: elige casos en el Selector';{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!cur;if(cur){$('grip').className='grip '+(g||'none');$('gripImg').src='assets/grip-'+(g||'none')+'.png';$('gripImg').alt=g==='u'?'Agarre u':g==='d'?'Agarre d':'Agarre sin marcar'}}$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
+function showCase(){const p=pool();peeked=false;setTimeout(renderPeek);$('curImg').hidden=!cur;if(cur){$('curImg').src=img(cur)}$('curName').textContent=cur?cur.n:(isToday()?'Plan de hoy completo. Mañana hay más.':'Sin casos: elige casos en el Selector');{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!cur;if(cur){$('grip').className='grip '+(g||'none');$('gripImg').src='assets/grip-'+(g||'none')+'.png';$('gripImg').alt=g==='u'?'Agarre u':g==='d'?'Agarre d':'Agarre sin marcar'}}$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
 const pad=$('pad'),tEl=$('time');let state='idle',t0=0,raf=0,holdT=0,justStopped=false,lastRec=null;
 function tick(){tEl.textContent=((performance.now()-t0)/1000).toFixed(2);raf=requestAnimationFrame(tick)}
 function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast('No hay casos seleccionados');return}
@@ -416,7 +430,7 @@ function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast(
 function up(){if(justStopped){justStopped=false;return}clearTimeout(holdT);
   if(state==='ready'){state='run';pad.className='';t0=performance.now();$('hint').textContent='Toca para detener';tick()}else if(state==='hold'){state='idle';pad.className=''}}
 function stop(){cancelAnimationFrame(raf);const ms=Math.round(performance.now()-t0);state='idle';pad.className='';tEl.textContent=(ms/1000).toFixed(2);$('hint').textContent='Mantén presionado y suelta para iniciar';
-  const u=ud(cur.id),rec={ms,ok:true,d:Date.now(),x2:curX2};u.r.push(rec);if(u.r.length>60)u.r.shift();lastRec={c:cur,u,rec};
+  const u=ud(cur.id),rec={ms,ok:true,d:Date.now(),x2:curX2,pk:peeked||!!S.alwaysAlg};u.r.push(rec);if(u.r.length>60)u.r.shift();const prev={lv:u.lv,due:u.due};grade(u,true,rec.pk);lastRec={c:cur,u,rec,prev};showPromo();
   const seen=curX2?pair(cur):cur;
   $('last').style.display='block';$('lastImg').src=img(seen);$('lastName').textContent=curX2?`${cur.n} con x2 (se ve como ${seen.n})`:cur.n;$('lastAlg').textContent=curX2?`x2 + ${myAlg(cur)}  ·  o directo: ${myAlg(seen)}`:myAlg(cur);$('lastTime').textContent=(ms/1000).toFixed(2);$('failBtn').textContent='Marcar como fallo';
   lastId=cur.id;save();pick();showCase();renderStats()}
@@ -426,7 +440,7 @@ pad.addEventListener('pointercancel',()=>{clearTimeout(holdT);if(state!=='run'){
 const inDrill=e=>$('drill').classList.contains('on')&&!det&&!fed&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
 document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&inDrill(e)){e.preventDefault();down()}});
 document.addEventListener('keyup',e=>{if(e.code==='Space'&&inDrill(e)){e.preventDefault();up()}});
-$('failBtn').onclick=()=>{if(!lastRec)return;lastRec.rec.ok=!lastRec.rec.ok;$('failBtn').textContent=lastRec.rec.ok?'Marcar como fallo':'Marcado como fallo ✕';save();renderStats()};
+$('failBtn').onclick=()=>{if(!lastRec)return;lastRec.rec.ok=!lastRec.rec.ok;const L=lastRec;L.u.lv=L.prev.lv;L.u.due=L.prev.due;if(L.u.lv==null){delete L.u.lv;delete L.u.due}grade(L.u,L.rec.ok,L.rec.pk);showPromo();renderLearn();$('failBtn').textContent=lastRec.rec.ok?'Marcar como fallo':'Marcado como fallo ✕';save();renderStats()};
 $('delBtn').onclick=()=>{if(!lastRec)return;const i=lastRec.u.r.indexOf(lastRec.rec);if(i>-1)lastRec.u.r.splice(i,1);lastRec=null;$('last').style.display='none';save();renderStats();toast('Tiempo borrado')};
 $('detBtn').onclick=()=>{if(lastRec)openDet(lastRec.c.id)};
 $('skipBtn').onclick=()=>{if(cur)lastId=cur.id;pick();showCase()};
@@ -439,7 +453,7 @@ function renderStats(){const F=activeF();$('statScope').textContent=F?`Mostrando
 
 /* ---- events ---- */
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.closest('#sheet'))return;
-  if(b.dataset.tab){document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('main section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab));if(b.dataset.tab==='datos')$('expBox').value=JSON.stringify(S);if(b.dataset.tab==='carpetas')refreshFolders();return}
+  if(b.dataset.tab==='coach')setTimeout(renderLearn);if(b.dataset.tab){document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('main section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab));if(b.dataset.tab==='datos')$('expBox').value=JSON.stringify(S);if(b.dataset.tab==='carpetas')refreshFolders();return}
   if(b.dataset.fprac){practiceF(b.dataset.fprac);return}
   if(b.dataset.fedit){const f=fById(b.dataset.fedit);if(f)openFolder(f);return}
   if(b.dataset.fgo!==undefined){enterFolder(b.dataset.fgo?fById(b.dataset.fgo):null);return}
@@ -482,11 +496,43 @@ function drawVines(){document.querySelectorAll('[data-vine]').forEach((svg,k)=>{
 drawVines();
 switchSet(SETS.includes(S.cur)?S.cur:'OBL');
 
+
+/* ---- learning queue (spaced repetition) ---- */
+const INTV=[0,1,2,4,8,16];
+function today(){const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)}
+function isToday(){return S.af[S.cur]==='__today'}
+function learnCfg(){S.learn=S.learn||{src:(S.folders.find(f=>f.id==='notion')||{}).id||'',n:4,day:0,news:[]};return S.learn}
+function srcCases(L){const k=L.set||'OBL';const f=L.src?fById(L.src):null;return (D[k]||[]).filter(c=>f?inF(f,c):peek(c.id).sel)}
+function dueList(k){const t=today();return (D[k]||[]).filter(c=>{const u=peek(c.id);return u.lv!=null&&u.due<=t&&u.st!=='dominado'})}
+function introduce(n){const L=learnCfg(),k=L.set||'OBL',t=today();if(!D[k])return 0;let added=0;
+  for(const c of srcCases(L)){if(added>=n)break;const u=peek(c.id);if(u.lv!=null||u.st==='dominado')continue;const w=ud(c.id);w.lv=0;w.due=t;w.st='aprendiendo';L.news=[...(L.news||[]),c.id];added++}
+  return added}
+function ensureToday(){const L=learnCfg();if(!L.started)return;const k=L.set||'OBL';if(!D[k])return;const t=today();if(L.day===t)return;L.day=t;L.news=[];introduce(L.n||4);save();renderLearn()}
+function grade(u,ok,peeked){const t=today();if(u.lv==null||u.due>t||peeked)return;if(ok){u.lv=Math.min((u.lv||0)+1,5);u.due=t+INTV[u.lv]}else{u.lv=0;u.due=t}}
+function renderLearn(){const L=learnCfg(),k=L.set||'OBL',sel=$('learnSrc');if(!sel)return;
+  const fs=S.folders.filter(f=>f.set===k);sel.innerHTML=`<option value="">Mi selección</option>`+fs.map(f=>`<option value="${esc(f.id)}">Carpeta: ${esc(f.name)}</option>`).join('');sel.value=fs.some(f=>f.id===L.src)?L.src:'';
+  $('learnN').value=L.n||4;
+  if(!D[k]){$('learnSum').textContent='Cargando…';return}
+  const src=srcCases(L),left=src.filter(c=>{const u=peek(c.id);return u.lv==null&&u.st!=='dominado'}).length,learning=src.filter(c=>peek(c.id).lv!=null&&peek(c.id).st!=='dominado').length,dom=src.filter(c=>peek(c.id).st==='dominado').length,due=dueList(k).length;
+  $('learnSum').textContent=L.started?`Hoy: ${due} pendiente${due===1?'':'s'} (${(L.news||[]).length} nuevos). En tu fuente: ${learning} aprendiendo · ${dom} dominados · ${left} por empezar${left?` (≈ ${(d=>d+(d===1?' día':' días'))(Math.ceil(left/(L.n||4)))})`:''}.`:`En tu fuente hay ${left} casos por empezar. Toca “Empezar plan de hoy” para arrancar.`;
+  $('learnGo').textContent=L.started?'Practicar el plan de hoy':'Empezar plan de hoy'}
+$('learnSrc').onchange=e=>{learnCfg().src=e.target.value;save();renderLearn()};
+$('learnN').onchange=e=>{learnCfg().n=Math.max(1,Math.min(12,+e.target.value||4));save();renderLearn()};
+$('learnGo').onclick=async()=>{const L=learnCfg();L.set=L.set||'OBL';if(S.cur!==L.set)await switchSet(L.set);if(!L.started){L.started=true;L.day=0}ensureToday();S.af[S.cur]='__today';editF=null;save();renderPractice();pick();showCase();goTab('drill');window.scrollTo(0,0)};
+$('learnMore').onclick=async()=>{const L=learnCfg();L.set=L.set||'OBL';if(S.cur!==L.set)await switchSet(L.set);if(!L.started){L.started=true;L.day=today();L.news=[]}const n=introduce(2);save();renderLearn();if(isToday()){pick();showCase()}toast(n?`${n} caso${n>1?'s':''} nuevo${n>1?'s':''} agregado${n>1?'s':''}`:'Ya no quedan casos nuevos en tu fuente')};
+
+function showPromo(){const L=lastRec;const on=L&&L.rec.ok&&(L.u.lv||0)>=4&&L.u.st!=='dominado';$('promo').hidden=!on;if(on)$('promoTxt').textContent=`${L.c.n}: tres repasos limpios espaciados. ¿Ya lo dominas?`}
+/* ---- algorithm peek ---- */
+function renderPeek(){const b=$('algPeek');if(!cur){b.hidden=true;return}b.hidden=false;const show=peeked||S.alwaysAlg;b.classList.toggle('on',show);b.textContent=show?(myAlg(cur)||'Sin algoritmo elegido'):'Ver algoritmo'}
+$('algPeek').onclick=e=>{e.stopPropagation();peeked=!peeked||S.alwaysAlg;renderPeek()};
+$('alwaysAlg').checked=!!S.alwaysAlg;$('alwaysAlg').onchange=e=>{S.alwaysAlg=e.target.checked;save();renderPeek()};
+$('promoBtn').onclick=()=>{if(!lastRec)return;lastRec.u.st='dominado';save();$('promo').hidden=true;renderLearn();renderStats();if(isToday()){pick();showCase()}toast('Marcado como dominado')};
+
 /* ---- sync with GitHub ---- */
 const GHK='sq1trainer.gh',PLANK='sq1trainer.plan';
 const saveGh=()=>{try{localStorage.setItem(GHK,JSON.stringify(gh))}catch(e){}};
-function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai||0,ca:u.ca||'',gr:u.gr||'',no:u.no||'',r:(u.r||[]).slice(-60)}}
-function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af})}
+function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai||0,ca:u.ca||'',gr:u.gr||'',no:u.no||'',...(u.lv!=null?{lv:u.lv,due:u.due}:{}),r:(u.r||[]).slice(-60)}}
+function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af,learn:S.learn||null,alwaysAlg:!!S.alwaysAlg})}
 function ckey(k,id){return k+'_'+id}
 function stampLocal(){const now=Date.now();for(const k of SETS)for(const [id,u] of Object.entries(S.u[k]||{})){const b=JSON.stringify(strip(u)),key=ckey(k,id);if(localCache[key]!==b){if(localCache[key]!==undefined||!u.t)u.t=now;localCache[key]=b}}
   const m=metaOf();if(metaL!==m){if(metaL!==null||!S.mt)S.mt=now;metaL=m}}
@@ -505,10 +551,10 @@ async function putFile(path,obj,sha,msg){const r=await api(path,{method:'PUT',he
 function buildRemote(){const u={};for(const k of SETS){u[k]={};for(const [id,x] of Object.entries(S.u[k]||{})){const nm=nameOf(k,id)||x.nm||'';if(nm)x.nm=nm;u[k][id]={...strip(x),t:x.t||0,name:nm}}}
   return {v:1,meta:{...JSON.parse(metaOf()),mt:S.mt||0},u}}
 function mergeRemote(R){let changed=false;const m=R.meta;
-  if(m&&(m.mt||0)>(S.mt||0)){Object.assign(S,{cur:SETS.includes(m.cur)?m.cur:S.cur,smart:!!m.smart,skipDom:!!m.skipDom,x2:m.x2||'off',showNeg:m.showNeg!==false,pairSel:!!m.pairSel,folders:m.folders||[],af:m.af||{},mt:m.mt});changed=true}
+  if(m&&(m.mt||0)>(S.mt||0)){Object.assign(S,{cur:SETS.includes(m.cur)?m.cur:S.cur,smart:!!m.smart,skipDom:!!m.skipDom,x2:m.x2||'off',showNeg:m.showNeg!==false,pairSel:!!m.pairSel,folders:m.folders||[],af:m.af||{},learn:m.learn||S.learn,alwaysAlg:!!m.alwaysAlg,mt:m.mt});changed=true}
   for(const k of SETS)for(const [id,r] of Object.entries((R.u||{})[k]||{})){const loc=S.u[k][id];
     const seen=new Set(),recs=[...(loc&&loc.r||[]),...(r.r||[])].filter(x=>{const q=x.d+'_'+x.ms;if(seen.has(q))return false;seen.add(q);return true}).sort((a,b)=>a.d-b.d).slice(-60);
-    if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai||0,ca:r.ca||'',gr:r.gr||'',no:r.no||'',r:recs,t:r.t,nm:r.name||''};changed=true}
+    if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai||0,ca:r.ca||'',gr:r.gr||'',no:r.no||'',...(r.lv!=null?{lv:r.lv,due:r.due}:{}),r:recs,t:r.t,nm:r.name||''};changed=true}
     else if(recs.length!==(loc.r||[]).length){loc.r=recs;changed=true}}
   return changed}
 let syncing=false;
@@ -548,10 +594,10 @@ $('ghSave').onclick=()=>{const repo=$('ghRepo').value.trim().replace(/^https?:\/
 $('ghNow').onclick=()=>sync();
 $('ghForget').onclick=()=>{delete gh.token;saveGh();$('ghToken').value='';syncMsg('Token borrado de este dispositivo.')};
 window.addEventListener('online',()=>sync());
-document.addEventListener('visibilitychange',()=>sync());
+document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v9 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v10 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
