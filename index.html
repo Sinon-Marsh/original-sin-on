@@ -231,6 +231,7 @@ a{color:inherit}
   </div>
   <details class="card drillSet">
     <summary>Ajustes del drill</summary>
+    <div class="lbl" style="margin-bottom:6px">Timer GAN Halo</div><div class="row" style="margin-bottom:12px"><button class="btn" id="ganBtn">Conectar timer GAN</button><span class="lbl" id="ganStatus">Sin conectar</span></div>
     <div class="lbl" style="margin-bottom:6px">Modo</div><div class="seg" style="margin-bottom:12px"><button data-dm="timer">Timer</button><button data-dm="rec">Reconocimiento</button></div>
     <p class="note" id="poolInfo" style="margin:0 0 10px"></p>
   <div class="row setChips"></div>
@@ -241,6 +242,7 @@ a{color:inherit}
 
 <section id="stats">
   <div class="row setChips"></div>
+  <div class="row" style="margin-top:10px"><span class="lbl">Tiempos de:</span><div class="seg" role="group" aria-label="Fuente de tiempos"><button data-srcf="all">Todos</button><button data-srcf="gan">Timer GAN</button><button data-srcf="man">Teléfono / teclado</button></div></div>
   <div class="card"><div class="sum" id="sum"></div></div>
   <div class="card"><p class="note" id="statScope"></p><p class="note">Casos con tiempos, del más lento al más rápido. Promedio de los últimos 12 intentos válidos.</p><div id="statTable"></div></div>
 </section>
@@ -260,7 +262,7 @@ a{color:inherit}
     <div class="fig" id="figAct"><svg aria-label="Solves por día"></svg></div>
     <div class="chartT">Resultados “Bien” por día</div>
     <div class="fig" id="figRet"><svg aria-label="Porcentaje de resultados Bien por día"></svg></div>
-    <div class="chartT">Tiempo promedio por caso (timer)</div>
+    <div class="chartT">Tiempo promedio por caso (timer)</div><div class="lbl" id="timeSrc"></div>
     <div class="fig" id="figTime"><svg aria-label="Tiempo promedio por día"></svg></div>
     <div class="tip" id="tip" hidden></div>
   </div>
@@ -365,7 +367,8 @@ function addMove(part,mv){const m=part.match(/(-?\d+)\s*,\s*(-?\d+)/),p=mv.split
 function scramble(c){const parts=rnd(c.s).split('/').map(x=>x.trim());parts[0]=addMove(parts[0],rnd(PRE));parts[parts.length-1]=addMove(parts[parts.length-1],rnd(PRE));return parts.join(' / ').trim()}
 
 /* ---- stats ---- */
-const okT=u=>u.r.filter(x=>x.ok&&x.m!=='r').map(x=>x.ms);
+const srcOk=x=>!S.srcF||S.srcF==='all'||(S.srcF==='gan'?x.src==='gan':x.src!=='gan');
+const okT=u=>u.r.filter(x=>x.ok&&x.m!=='r'&&srcOk(x)).map(x=>x.ms);
 const avg=u=>{const t=okT(u).slice(-12);return t.length?t.reduce((a,b)=>a+b,0)/t.length:null};
 const avgX2=u=>{const t=u.r.filter(x=>x.ok&&x.x2).map(x=>x.ms).slice(-12);return t.length?t.reduce((a,b)=>a+b,0)/t.length:null};
 const best=u=>{const t=okT(u);return t.length?Math.min(...t):null};
@@ -475,16 +478,18 @@ function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast(
   state='hold';pad.className='hold';tEl.textContent='0.00';holdT=setTimeout(()=>{if(state==='hold'){state='ready';pad.className='ready'}},300)}
 function up(){if(justStopped){justStopped=false;return}clearTimeout(holdT);
   if(state==='ready'){state='run';pad.className='';t0=performance.now();$('hint').textContent='Toca para detener';tick()}else if(state==='hold'){state='idle';pad.className=''}}
-function stop(){cancelAnimationFrame(raf);const ms=Math.round(performance.now()-t0);state='idle';pad.className='';tEl.textContent=(ms/1000).toFixed(2);$('hint').textContent='Mantén presionado y suelta para iniciar';
-  const u=ud(cur.id),rec={ms,ok:true,d:Date.now(),x2:curX2,pk:peeked||!!S.alwaysAlg};u.r.push(rec);if(u.r.length>60)u.r.shift();const prev={lv:u.lv,due:u.due};grade(u,'ok',rec.pk);lastRec={c:cur,u,rec,prev};showPromo();
+let inSrc='tap';
+function stop(){cancelAnimationFrame(raf);const ms=Math.round(performance.now()-t0);recordSolve(ms,inSrc)}
+function recordSolve(ms,src){if(!cur)return;state='idle';pad.className='';tEl.textContent=(ms/1000).toFixed(2);$('hint').textContent=gan?'GAN conectado · pon las manos para iniciar':'Mantén presionado y suelta para iniciar';
+  const u=ud(cur.id),rec={ms,ok:true,d:Date.now(),x2:curX2,pk:peeked||!!S.alwaysAlg,src};u.r.push(rec);if(u.r.length>60)u.r.shift();const prev={lv:u.lv,due:u.due};grade(u,'ok',rec.pk);lastRec={c:cur,u,rec,prev};showPromo();
   const seen=curX2?pair(cur):cur;
   $('last').style.display='block';$('lastImg').src=img(seen);$('lastName').textContent=curX2?`${cur.n} con x2 (se ve como ${seen.n})`:cur.n;$('lastAlg').textContent=curX2?`x2 + ${myAlg(cur)}  ·  o directo: ${myAlg(seen)}`:myAlg(cur);$('lastTime').textContent=(ms/1000).toFixed(2);document.querySelectorAll('[data-fb]').forEach(x=>x.classList.toggle('on',x.dataset.fb==='ok'));
   lastId=cur.id;save();pick();showCase();renderStats()}
-pad.addEventListener('pointerdown',e=>{e.preventDefault();down()});
+pad.addEventListener('pointerdown',e=>{e.preventDefault();if(state!=='run')inSrc='tap';down()});
 pad.addEventListener('pointerup',e=>{e.preventDefault();up()});
 pad.addEventListener('pointercancel',()=>{clearTimeout(holdT);if(state!=='run'){state='idle';pad.className=''}});
 const inDrill=e=>S.dmode!=='rec'&&$('drill').classList.contains('on')&&!det&&!fed&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
-document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&inDrill(e)){e.preventDefault();down()}});
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&inDrill(e)){e.preventDefault();if(state!=='run')inSrc='key';down()}});
 document.addEventListener('keyup',e=>{if(e.code==='Space'&&inDrill(e)){e.preventDefault();up()}});
 document.querySelectorAll('[data-fb]').forEach(b=>b.onclick=()=>{if(!lastRec)return;const L=lastRec,f=b.dataset.fb;L.rec.f=f;L.rec.ok=f!=='exe';L.u.lv=L.prev.lv;L.u.due=L.prev.due;if(L.u.lv==null){delete L.u.lv;delete L.u.due}grade(L.u,f,L.rec.pk);
   document.querySelectorAll('[data-fb]').forEach(x=>x.classList.toggle('on',x===b));showPromo();renderLearn();save();renderStats()});
@@ -596,7 +601,7 @@ function dayKey(t){return localDate(t)}
 function lastDays(n){const out=[];const d=new Date();d.setHours(12,0,0,0);for(let i=n-1;i>=0;i--){const x=new Date(d);x.setDate(d.getDate()-i);out.push(localDate(x.getTime()))}return out}
 function allRecs(){const out=[];for(const k of SETS)for(const u of Object.values(S.u[k]||{}))for(const r of (u.r||[]))out.push(r);return out}
 function progressData(){const days=lastDays(14),recs=allRecs(),by={};days.forEach(d=>by[d]={t:0,r:0,ok:0,g:0,ms:[]});
-  for(const r of recs){const k=dayKey(r.d);if(!by[k])continue;const b=by[k];if(r.m==='r')b.r++;else{b.t++;if(r.ok)b.ms.push(r.ms)}if(!r.pk){b.g++;if((r.f||(r.ok?'ok':'exe'))==='ok')b.ok++}}
+  for(const r of recs){const k=dayKey(r.d);if(!by[k])continue;const b=by[k];if(r.m==='r')b.r++;else{b.t++;if(r.ok&&srcOk(r))b.ms.push(r.ms)}if(!r.pk){b.g++;if((r.f||(r.ok?'ok':'exe'))==='ok')b.ok++}}
   let streak=0;const set=new Set(recs.map(r=>dayKey(r.d)));const d=new Date();d.setHours(12);if(!set.has(localDate(d.getTime())))d.setDate(d.getDate()-1);while(set.has(localDate(d.getTime()))){streak++;d.setDate(d.getDate()-1)}
   return {days,by,streak}}
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -627,11 +632,31 @@ function renderProgress(){if(!$('progCard')||!$('coach').classList.contains('on'
   const seg=[[dom,'Dominados','var(--pearl)'],[lrn,'Aprendiendo','var(--blush)'],[rest,'Por empezar','var(--line)']];const tot=Math.max(1,src.length);
   $('stackBar').innerHTML=seg.filter(s=>s[0]).map(s=>`<span style="flex:${s[0]/tot};background:${s[2]}" title="${s[1]}: ${s[0]}"></span>`).join('');$('stackBar').setAttribute('aria-label',seg.map(s=>s[1]+' '+s[0]).join(', '));
   $('stackLeg').innerHTML=seg.map(s=>`<span><i style="background:${s[2]}"></i>${s[1]} ${s[0]}</span>`).join('');
-  const lab=P.days.map(d=>{const [,m,dd]=d.split('-');return +dd+'/'+(+m)});
+  $('timeSrc').textContent={gan:'Solo timer GAN',man:'Solo teléfono / teclado'}[S.srcF]||'Todas las fuentes · cámbialo en Stats';const lab=P.days.map(d=>{const [,m,dd]=d.split('-');return +dd+'/'+(+m)});
   drawBars($('figAct'),P.days.map(d=>P.by[d].t+P.by[d].r),lab,i=>{const b=P.by[P.days[i]];return `<b>${lab[i]}</b> · ${b.t+b.r} solves<br>${b.t} timer · ${b.r} reconocimiento`});
   drawLine($('figRet'),P.days.map(d=>P.by[d].g?100*P.by[d].ok/P.by[d].g:null),lab,v=>Math.round(v)+'%',i=>{const b=P.by[P.days[i]];return `<b>${lab[i]}</b> · ${Math.round(100*b.ok/b.g)}% Bien<br>${b.ok} de ${b.g} sin ver el algoritmo`},0,100);
   drawLine($('figTime'),P.days.map(d=>{const m=P.by[d].ms;return m.length?m.reduce((a,b)=>a+b,0)/m.length/1000:null}),lab,v=>v.toFixed(1)+'s',i=>{const b=P.by[P.days[i]];return `<b>${lab[i]}</b> · ${(b.ms.reduce((a,c)=>a+c,0)/b.ms.length/1000).toFixed(2)} s promedio<br>${b.ms.length} solves de timer`})}
 {const ro=new ResizeObserver(()=>renderProgress());['figAct','figRet','figTime'].forEach(id=>ro.observe($(id)))}
+
+
+/* ---- GAN Halo smart timer (Web Bluetooth) ---- */
+let gan=null,ganSub=null;
+function loadGanLib(){return window.SinonGan?Promise.resolve(window.SinonGan):new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='assets/gan.js';sc.onload=()=>res(window.SinonGan);sc.onerror=rej;document.head.appendChild(sc)})}
+function ganUI(t){$('ganStatus').textContent=t;$('ganBtn').textContent=gan?'Desconectar':'Conectar timer GAN';$('hint').textContent=gan?'GAN conectado · pon las manos para iniciar':'Mantén presionado y suelta para iniciar'}
+function onGan(ev){const G=window.SinonGan.GanTimerState;
+  switch(ev.state){
+    case G.HANDS_ON: if(state!=='run'){state='hold';pad.className='hold';tEl.textContent='0.00'}break;
+    case G.GET_SET: if(state!=='run'){state='ready';pad.className='ready'}break;
+    case G.HANDS_OFF: case G.IDLE: if(state!=='run'){state='idle';pad.className=''}break;
+    case G.RUNNING: if(!cur){toast('No hay casos para practicar');break}state='run';pad.className='';t0=performance.now();$('hint').textContent='Corriendo en el timer GAN';cancelAnimationFrame(raf);tick();break;
+    case G.STOPPED: cancelAnimationFrame(raf);if(ev.recordedTime&&state==='run')recordSolve(ev.recordedTime.asTimestamp,'gan');else{state='idle';pad.className=''}break;
+    case G.DISCONNECT: gan=null;if(ganSub)ganSub.unsubscribe();ganSub=null;if(state==='run'){cancelAnimationFrame(raf);state='idle';pad.className=''}ganUI('Se desconectó; usa la pantalla o vuelve a conectar');break}}
+$('ganBtn').onclick=async()=>{if(gan){try{gan.disconnect()}catch(e){}gan=null;if(ganSub)ganSub.unsubscribe();ganSub=null;ganUI('Sin conectar');return}
+  if(!navigator.bluetooth){ganUI('Este navegador no soporta Bluetooth; usa Chrome en Android o en la PC');return}
+  try{ganUI('Buscando…');const L=await loadGanLib();gan=await L.connectGanTimer();ganSub=gan.events$.subscribe(onGan);ganUI('Conectado')}
+  catch(e){gan=null;ganUI(e&&e.name==='NotFoundError'?'No se eligió ningún timer':'No se pudo conectar: '+((e&&e.message)||'error'))}};
+document.querySelectorAll('[data-srcf]').forEach(b=>b.onclick=()=>{S.srcF=b.dataset.srcf;save();document.querySelectorAll('[data-srcf]').forEach(x=>x.classList.toggle('on',x===b));renderStats();renderProgress()});
+document.querySelectorAll('[data-srcf]').forEach(x=>x.classList.toggle('on',x.dataset.srcf===(S.srcF||'all')));
 
 /* ---- recognition mode ---- */
 let rT0=0;
@@ -649,7 +674,7 @@ applyMode();
 const GHK='sq1trainer.gh',PLANK='sq1trainer.plan';
 const saveGh=()=>{try{localStorage.setItem(GHK,JSON.stringify(gh))}catch(e){}};
 function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai??null,ca:u.ca||'',gr:u.gr||'',no:u.no||'',...(u.lv!=null?{lv:u.lv,due:u.due}:{}),r:(u.r||[]).slice(-60)}}
-function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af,learn:S.learn||null,alwaysAlg:!!S.alwaysAlg,dmode:S.dmode||'timer',tdone:S.tdone||null})}
+function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af,learn:S.learn||null,alwaysAlg:!!S.alwaysAlg,dmode:S.dmode||'timer',tdone:S.tdone||null,srcF:S.srcF||'all'})}
 function ckey(k,id){return k+'_'+id}
 function stampLocal(){const now=Date.now();for(const k of SETS)for(const [id,u] of Object.entries(S.u[k]||{})){const b=JSON.stringify(strip(u)),key=ckey(k,id);if(localCache[key]!==b){if(localCache[key]!==undefined||!u.t)u.t=now;localCache[key]=b}}
   const m=metaOf();if(metaL!==m){if(metaL!==null||!S.mt)S.mt=now;metaL=m}}
@@ -714,7 +739,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v17 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v18 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
