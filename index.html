@@ -55,7 +55,7 @@ section{display:none}section.on{display:block}
 .scr{font:500 clamp(19px,4.8vw,26px)/1.4 Inter,sans-serif;text-align:center;word-spacing:3px;margin:6px 0 2px;letter-spacing:-.01em}
 .lbl{font-size:13px;color:var(--mute)}
 .c{text-align:center}
-#pad{margin-top:10px;border-radius:4px;background:radial-gradient(circle at 50% 48%,var(--glow) 0,transparent 55%),var(--card);border:1px solid var(--line);min-height:max(48vh,calc(100svh - 400px));display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;position:relative;overflow:hidden}
+#pad{margin-top:10px;border-radius:4px;background:radial-gradient(circle at 50% 48%,var(--glow) 0,transparent 55%),var(--card);border:1px solid var(--line);min-height:max(56vh,calc(100svh - 236px));display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;position:relative;overflow:hidden}
 #pad::before{content:"";position:absolute;inset:10px;border:1px solid var(--line);opacity:.7;pointer-events:none}
 #pad::after{content:"";position:absolute;inset:6px;pointer-events:none;--c:var(--hair);background:linear-gradient(var(--c),var(--c)) top left/14px 1px,linear-gradient(var(--c),var(--c)) top left/1px 14px,linear-gradient(var(--c),var(--c)) top right/14px 1px,linear-gradient(var(--c),var(--c)) top right/1px 14px,linear-gradient(var(--c),var(--c)) bottom left/14px 1px,linear-gradient(var(--c),var(--c)) bottom left/1px 14px,linear-gradient(var(--c),var(--c)) bottom right/14px 1px,linear-gradient(var(--c),var(--c)) bottom right/1px 14px;background-repeat:no-repeat}
 #pad .corner{position:absolute;width:38px;height:38px;color:var(--hair);pointer-events:none}
@@ -65,6 +65,10 @@ section{display:none}section.on{display:block}
 #pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
 #pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
 #last{display:none}
+body:has(#drill.on) header{padding-top:10px}
+body:has(#drill.on) header .logo,body:has(#drill.on) header .vine,body:has(#drill.on) header .sub{display:none}
+body:has(#drill.on) h1{font-size:24px}
+body:has(#drill.on) nav{padding-top:8px;padding-bottom:10px}
 .scrCard{margin-top:0;padding:12px 14px}.scrCard .scr{margin:0 0 2px;text-align:left}.scrCard .lbl.c{text-align:left}
 details.drillSet{margin-top:14px}details.drillSet summary{cursor:pointer;font:italic 500 20px 'Cormorant Garamond',serif;list-style:none}details.drillSet summary::-webkit-details-marker{display:none}
 details.drillSet summary::before{content:"✝ ";font-style:normal;font-size:13px;color:var(--mute)}details.drillSet[open] summary{margin-bottom:10px}
@@ -545,7 +549,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>sync());
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v5 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v6 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
