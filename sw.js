@@ -1,6 +1,6 @@
 // Original Sin-on — service worker: works offline after the first visit.
-const VERSION = 'sin-on-v1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest',   "assets/fonts/cormorant-garamond-latin-400-italic.woff2",  "assets/fonts/cormorant-garamond-latin-400-normal.woff2",  "assets/fonts/cormorant-garamond-latin-500-italic.woff2",  "assets/fonts/cormorant-garamond-latin-500-normal.woff2",  "assets/fonts/cormorant-garamond-latin-600-normal.woff2",  "assets/fonts/inter-latin-400-normal.woff2",  "assets/fonts/inter-latin-500-normal.woff2",  "assets/fonts/inter-latin-600-normal.woff2",  "assets/icon-180.png",  "assets/icon-192.png",  "assets/icon-32.png",  "assets/icon-512.png",  "assets/icon-maskable-512.png",  "assets/logo.png",  "data/obl.json",  "data/pbl.json"];
+const VERSION = 'sin-on-v2';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest',   "assets/fonts/cormorant-garamond-latin-400-italic.woff2",  "assets/fonts/cormorant-garamond-latin-400-normal.woff2",  "assets/fonts/cormorant-garamond-latin-500-italic.woff2",  "assets/fonts/cormorant-garamond-latin-500-normal.woff2",  "assets/fonts/cormorant-garamond-latin-600-normal.woff2",  "assets/fonts/inter-latin-400-normal.woff2",  "assets/fonts/inter-latin-500-normal.woff2",  "assets/fonts/inter-latin-600-normal.woff2",  "assets/grip-d.png",  "assets/grip-u.png",  "assets/icon-180.png",  "assets/icon-192.png",  "assets/icon-32.png",  "assets/icon-512.png",  "assets/icon-maskable-512.png",  "assets/logo.png",  "data/obl.json",  "data/pbl.json"];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });

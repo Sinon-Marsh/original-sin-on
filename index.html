@@ -64,6 +64,10 @@ section{display:none}section.on{display:block}
 #pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
 #pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
 #last{display:none}
+.scrRow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
+.grip{width:76px;text-align:center}.grip img{display:block;width:76px;height:76px;border:1px solid var(--line);border-radius:4px}
+.grip span{display:block;font:italic 500 18px 'Cormorant Garamond',serif;margin-top:2px}
+.grip.u img{box-shadow:0 0 18px -4px var(--halo)}
 .lastgrid{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
 .lastgrid img{height:96px}
 .big{font:500 20px 'Cormorant Garamond',serif}
@@ -173,8 +177,8 @@ a{color:inherit}
   <p class="note">y2 ya va incluido: cada scramble agrega giros aleatorios de 90° y 180° en ambas capas.</p>
   <div class="card">
     <div class="lbl c">Scramble</div><div class="c" id="flipNote" style="font-weight:600;color:var(--hold);display:none">Voltea el puzzle resuelto (x2, otro color arriba) y luego aplica:</div>
-    <div class="scr" id="scr">—</div>
-    <div class="lbl c" id="poolInfo"></div>
+    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""><span id="gripTxt"></span></div><div><div class="scr" id="scr">—</div>
+    <div class="lbl c" id="poolInfo"></div></div></div>
   </div>
   <div id="pad" role="button" tabindex="0" aria-label="Cronómetro: mantén presionado y suelta para iniciar, toca para detener">
     <svg class="corner tl" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner tr" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner bl" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner br" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg>
@@ -332,11 +336,13 @@ function openDet(id){const c=byId(id);if(!c)return;det=c;const u=ud(c.id),uo=ud(
   ${c.neg?`<p class="note">Mismos movimientos que ${esc(own(c).n)}: solo terminas con el otro color arriba. Tu elección se comparte con ese caso.</p>`:''}
   ${c.a.map((a,i)=>`<label class="alg"><input type="radio" name="alg" value="${i}"${uo.ai===i?' checked':''}><span>${esc(a)}</span></label>`).join('')}
   <label class="alg"><input type="radio" name="alg" value="-1"${uo.ai===-1?' checked':''}><span style="flex:1">Propio<input type="text" id="dCa" value="${esc(uo.ca)}" placeholder="Escribe tu algoritmo" style="margin-top:6px"></span></label>
+  <h2 style="margin-top:16px">Agarre</h2><p class="note">Posición de tus manos al empezar el algoritmo; la verás en el Drill.</p>
+  <div class="seg" role="group" aria-label="Agarre">${[['','Sin marcar'],['u','(u)'],['d','(d)']].map(([v,l])=>`<button data-dgr="${v}" class="${(uo.gr||'')===v?'on':''}">${l}</button>`).join('')}</div>
   <h2 style="margin-top:16px">Notas</h2><textarea id="dNo" placeholder="Reconocimiento, fingertricks…">${esc(u.no)}</textarea>
   <div class="row" style="margin-top:14px"><button class="btn pri" id="dClose">Listo</button></div>`;
   $('sheet').classList.add('on');$('sheetIn').scrollTop=0;$('dClose').focus({preventScroll:true})}
 function closeDet(){if(!det)return;const u=ud(det.id),uo=ud(own(det).id);uo.ca=$('dCa').value.trim();u.no=$('dNo').value;if(uo.ai===-1&&!uo.ca)uo.ai=0;save();const id=det.id;det=null;$('sheet').classList.remove('on');refreshTile(id);renderStats()}
-$('sheet').addEventListener('click',e=>{if(fed){folderClick(e);return}if(e.target.id==='sheet'||e.target.id==='dClose')return closeDet();const pb=e.target.closest('[data-dpair]');if(pb){const id=pb.dataset.dpair;closeDet();openDet(id);return}const b=e.target.closest('[data-dst]');if(b){ud(det.id).st=b.dataset.dst;save();$('sheetIn').querySelectorAll('[data-dst]').forEach(x=>x.classList.toggle('on',x===b))}});
+$('sheet').addEventListener('click',e=>{const gb=e.target.closest('[data-dgr]');if(gb&&det){ud(own(det).id).gr=gb.dataset.dgr;save();$('sheetIn').querySelectorAll('[data-dgr]').forEach(x=>x.classList.toggle('on',x===gb));showCase();return}if(fed){folderClick(e);return}if(e.target.id==='sheet'||e.target.id==='dClose')return closeDet();const pb=e.target.closest('[data-dpair]');if(pb){const id=pb.dataset.dpair;closeDet();openDet(id);return}const b=e.target.closest('[data-dst]');if(b){ud(det.id).st=b.dataset.dst;save();$('sheetIn').querySelectorAll('[data-dst]').forEach(x=>x.classList.toggle('on',x===b))}});
 $('sheet').addEventListener('change',e=>{if(fed){if(e.target.id==='fNoNeg'){fed.d.noNeg=e.target.checked;fPrev()}return}if(!det)return;const u=ud(det.id);if(e.target.id==='dSel'){u.sel=e.target.checked;save();renderSelector();pick();showCase()}else if(e.target.name==='alg'){ud(own(det).id).ai=+e.target.value;save()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(fed)closeFolder();else if(det)closeDet()}});
 
@@ -388,7 +394,7 @@ function pick(){const p=pool();if(!p.length){cur=null;return}const cand=p.length
     let r=Math.random()*w.reduce((a,b)=>a+b,0);cur=cand[cand.length-1];for(let i=0;i<cand.length;i++){r-=w[i];if(r<=0){cur=cand[i];break}}}
   const pp=S.cur==='OBL'?pair(cur):null;curX2=!!pp&&pp.id!==cur.id&&(S.x2==='only'||(S.x2==='mix'&&Math.random()<.5));
   curScr=scramble(curX2?pp:cur)}
-function showCase(){const p=pool();const shown=cur?(curX2?pair(cur):cur):null;$('flipNote').style.display=shown&&shown.neg?'block':'none';$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
+function showCase(){const p=pool();{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!g;if(g){$('grip').className='grip '+g;$('gripImg').src='assets/grip-'+g+'.png';$('gripImg').alt=g==='u'?'Agarre u':'Agarre d';$('gripTxt').textContent='('+g+')'}}const shown=cur?(curX2?pair(cur):cur):null;$('flipNote').style.display=shown&&shown.neg?'block':'none';$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
 const pad=$('pad'),tEl=$('time');let state='idle',t0=0,raf=0,holdT=0,justStopped=false,lastRec=null;
 function tick(){tEl.textContent=((performance.now()-t0)/1000).toFixed(2);raf=requestAnimationFrame(tick)}
 function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast('No hay casos seleccionados');return}
@@ -465,7 +471,7 @@ switchSet(SETS.includes(S.cur)?S.cur:'OBL');
 /* ---- sync with GitHub ---- */
 const GHK='sq1trainer.gh',PLANK='sq1trainer.plan';
 const saveGh=()=>{try{localStorage.setItem(GHK,JSON.stringify(gh))}catch(e){}};
-function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai||0,ca:u.ca||'',no:u.no||'',r:(u.r||[]).slice(-60)}}
+function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai||0,ca:u.ca||'',gr:u.gr||'',no:u.no||'',r:(u.r||[]).slice(-60)}}
 function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af})}
 function ckey(k,id){return k+'_'+id}
 function stampLocal(){const now=Date.now();for(const k of SETS)for(const [id,u] of Object.entries(S.u[k]||{})){const b=JSON.stringify(strip(u)),key=ckey(k,id);if(localCache[key]!==b){if(localCache[key]!==undefined||!u.t)u.t=now;localCache[key]=b}}
@@ -488,7 +494,7 @@ function mergeRemote(R){let changed=false;const m=R.meta;
   if(m&&(m.mt||0)>(S.mt||0)){Object.assign(S,{cur:SETS.includes(m.cur)?m.cur:S.cur,smart:!!m.smart,skipDom:!!m.skipDom,x2:m.x2||'off',showNeg:m.showNeg!==false,pairSel:!!m.pairSel,folders:m.folders||[],af:m.af||{},mt:m.mt});changed=true}
   for(const k of SETS)for(const [id,r] of Object.entries((R.u||{})[k]||{})){const loc=S.u[k][id];
     const seen=new Set(),recs=[...(loc&&loc.r||[]),...(r.r||[])].filter(x=>{const q=x.d+'_'+x.ms;if(seen.has(q))return false;seen.add(q);return true}).sort((a,b)=>a.d-b.d).slice(-60);
-    if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai||0,ca:r.ca||'',no:r.no||'',r:recs,t:r.t,nm:r.name||''};changed=true}
+    if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai||0,ca:r.ca||'',gr:r.gr||'',no:r.no||'',r:recs,t:r.t,nm:r.name||''};changed=true}
     else if(recs.length!==(loc.r||[]).length){loc.r=recs;changed=true}}
   return changed}
 let syncing=false;
