@@ -304,14 +304,14 @@ let peeked=false;let gh={};try{gh=JSON.parse(localStorage.getItem('sq1trainer.gh
 const save=()=>{stampLocal();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};schedulePush()};
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1800)};
 const D={}, IMG={};
-const ud=id=>S.u[S.cur][id]||(S.u[S.cur][id]={sel:false,st:'pendiente',ai:0,ca:'',no:'',r:[]});
-const peek=id=>S.u[S.cur][id]||{sel:false,st:'pendiente',ai:0,ca:'',no:'',r:[]};
+const ud=id=>S.u[S.cur][id]||(S.u[S.cur][id]={sel:false,st:'pendiente',ai:null,ca:'',no:'',r:[]});
+const peek=id=>S.u[S.cur][id]||{sel:false,st:'pendiente',ai:null,ca:'',no:'',r:[]};
 const isNeg=()=>false;
 const svgOf=c=>c.v.replace(/#777/g,'#5b5751').replace(/#fafafa/g,'#ece6da').replace(/#222/g,'#121212');
 const img=c=>{const k=(c._k||S.cur)+c.id+(isNeg()?'n':'');return IMG[k]||(IMG[k]='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgOf(c)))};
 const pair=c=>c&&c.x!=null?byId(c.x):null;
 const own=c=>c;
-const myAlg=c0=>{const c=own(c0),u=peek(c.id);if(typeof u.ai==='string'&&u.ai[0]==='k'){const o=(c.k||[])[+u.ai.slice(1)];if(o)return o.a}return u.ai===-1&&u.ca?u.ca:(c.a[u.ai]||((c.k||[])[0]||{}).a||c.a[0]||'')};
+const myAlg=c0=>{const c=own(c0),u=peek(c.id);if(typeof u.ai==='string'&&u.ai[0]==='k'){const o=(c.k||[])[+u.ai.slice(1)];if(o)return o.a}if(u.ai==null){return ((c.k||[])[0]||{}).a||c.a[(c.tk||[])[0]??0]||''}return u.ai===-1&&u.ca?u.ca:(c.a[u.ai]||((c.k||[])[0]||{}).a||c.a[0]||'')};
 const cases=()=>D[S.cur]||[];
 const byId=id=>cases().find(c=>c.id===+id);
 
@@ -332,7 +332,7 @@ const f2=ms=>ms==null?'—':(ms/1000).toFixed(2);
 /* ---- load ---- */
 const negSvg=v=>v.replace(/#222/g,'@@').replace(/#fafafa/g,'#222').replace(/@@/g,'#fafafa');
 async function load(k){if(D[k])return;try{const r=await fetch(SRC[k]);let d=await r.json();
-  if(k==='OBL'){const out=[];d.forEach(c=>{out.push(c);if(!c.ident)out.push({id:-c.id,n:c.n+' (neg)',g:c.g,a:c.a,k:c.kn||[],s:c.ns,v:negSvg(c.v),x:c.nx,neg:true,base:c})});d=out}
+  if(k==='OBL'){const out=[];d.forEach(c=>{out.push(c);if(!c.ident)out.push({id:-c.id,n:c.n+' (neg)',g:c.g,a:c.a,k:c.kn||[],tk:c.tkn||[],s:c.ns,v:negSvg(c.v),x:c.nx,neg:true,base:c})});d=out}
   d.forEach(c=>c._k=k);D[k]=d;let mig=false;(S.folders||[]).forEach(f=>{if(f.set===k&&f.q){f.ids=fMembers(f).map(c=>c.id);f.ex=[];f.q='';mig=true}});if(mig)save()}catch(e){D[k]=null}}
 async function switchSet(k){S.cur=k;save();renderChips();renderPractice();$('groups').innerHTML='<div class="empty">Cargando casos…</div>';await load(k);if(!D[k]){$('groups').innerHTML='<div class="empty">No se pudieron cargar los casos.</div>';return}editF=activeF();ensureToday();pick();renderSelector();renderStats();showCase();renderLearn()}
 function renderChips(){document.querySelectorAll('.oblOnly').forEach(el=>el.style.display=S.cur==='OBL'?'':'none');document.querySelectorAll('.setChips').forEach(el=>el.innerHTML=SETS.map(k=>`<button class="chip${S.cur===k?' on':''}" data-set="${k}">${k}</button>`).join(''))}
@@ -362,8 +362,8 @@ function openDet(id){const c=byId(id);if(!c)return;det=c;const u=ud(c.id),uo=ud(
   <h2 style="margin-top:16px">Estado</h2><div class="row">${ST.map(s=>`<button class="st ${s}${u.st===s?' on':''}" data-dst="${s}">${STL[s]}</button>`).join('')}</div>
   <h2 style="margin-top:16px">Mi algoritmo</h2>
   ${c.neg?`<p class="note">Los algoritmos de ${esc(c.base.n)} también resuelven este negativo. Tu elección y tu agarre aquí son independientes del caso normal.</p>`:''}
-  ${(c.k||[]).length?`<p class="note" style="margin:4px 0 2px">De la hoja de Carnot · dejan negro arriba</p>`+c.k.map((o,i)=>`<label class="alg"><input type="radio" name="alg" value="k${i}"${uo.ai==='k'+i?' checked':''}><span>${esc(o.a)}<span class="lbl" style="display:block">${esc(o.h||'')}${o.m?' · principal':''}${o.t?' (del trainer)':''}</span></span></label>`).join('')+`<p class="note" style="margin:10px 0 2px">Otros del trainer</p>`:''}
-  ${c.a.map((a,i)=>/^\[[^\]]*x2/.test(a)&&uo.ai!==i?'':`<label class="alg"><input type="radio" name="alg" value="${i}"${uo.ai===i?' checked':''}><span>${esc(a)}</span></label>`).join('')}
+  ${(c.k||[]).length?`<p class="note" style="margin:4px 0 2px">De la hoja de Carnot · dejan negro arriba</p>`+c.k.map((o,i)=>`<label class="alg"><input type="radio" name="alg" value="k${i}"${uo.ai==='k'+i||(uo.ai==null&&i===0)?' checked':''}><span>${esc(o.a)}<span class="lbl" style="display:block">${esc(o.h||'')}${o.m?' · principal':''}${o.t?' (del trainer)':''}</span></span></label>`).join('')+'':''}${(c.tk||[]).length||(typeof uo.ai==='number'&&uo.ai>=0&&(c.k||[]).length===0)?`<p class="note" style="margin:10px 0 2px">Del trainer · dejan negro arriba</p>`:''}
+  ${c.a.map((a,i)=>!(c.tk||[]).includes(i)&&uo.ai!==i?'':`<label class="alg"><input type="radio" name="alg" value="${i}"${uo.ai===i||(uo.ai==null&&!(c.k||[]).length&&(c.tk||[])[0]===i)?' checked':''}><span>${esc(a)}</span></label>`).join('')}
   <label class="alg"><input type="radio" name="alg" value="-1"${uo.ai===-1?' checked':''}><span style="flex:1">Propio<input type="text" id="dCa" value="${esc(uo.ca)}" placeholder="Escribe tu algoritmo" style="margin-top:6px"></span></label>
   <h2 style="margin-top:16px">Agarre</h2><p class="note">Posición de tus manos al empezar el algoritmo; la verás en el Drill.</p>
   <div class="seg" role="group" aria-label="Agarre">${[['','Sin marcar'],['u','(u)'],['d','(d)']].map(([v,l])=>`<button data-dgr="${v}" class="${(uo.gr||'')===v?'on':''}">${l}</button>`).join('')}</div>
@@ -532,7 +532,7 @@ $('promoBtn').onclick=()=>{if(!lastRec)return;lastRec.u.st='dominado';save();$('
 /* ---- sync with GitHub ---- */
 const GHK='sq1trainer.gh',PLANK='sq1trainer.plan';
 const saveGh=()=>{try{localStorage.setItem(GHK,JSON.stringify(gh))}catch(e){}};
-function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai||0,ca:u.ca||'',gr:u.gr||'',no:u.no||'',...(u.lv!=null?{lv:u.lv,due:u.due}:{}),r:(u.r||[]).slice(-60)}}
+function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai??null,ca:u.ca||'',gr:u.gr||'',no:u.no||'',...(u.lv!=null?{lv:u.lv,due:u.due}:{}),r:(u.r||[]).slice(-60)}}
 function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af,learn:S.learn||null,alwaysAlg:!!S.alwaysAlg})}
 function ckey(k,id){return k+'_'+id}
 function stampLocal(){const now=Date.now();for(const k of SETS)for(const [id,u] of Object.entries(S.u[k]||{})){const b=JSON.stringify(strip(u)),key=ckey(k,id);if(localCache[key]!==b){if(localCache[key]!==undefined||!u.t)u.t=now;localCache[key]=b}}
@@ -555,7 +555,7 @@ function mergeRemote(R){let changed=false;const m=R.meta;
   if(m&&(m.mt||0)>(S.mt||0)){Object.assign(S,{cur:SETS.includes(m.cur)?m.cur:S.cur,smart:!!m.smart,skipDom:!!m.skipDom,x2:m.x2||'off',showNeg:m.showNeg!==false,pairSel:!!m.pairSel,folders:m.folders||[],af:m.af||{},learn:m.learn||S.learn,alwaysAlg:!!m.alwaysAlg,mt:m.mt});changed=true}
   for(const k of SETS)for(const [id,r] of Object.entries((R.u||{})[k]||{})){const loc=S.u[k][id];
     const seen=new Set(),recs=[...(loc&&loc.r||[]),...(r.r||[])].filter(x=>{const q=x.d+'_'+x.ms;if(seen.has(q))return false;seen.add(q);return true}).sort((a,b)=>a.d-b.d).slice(-60);
-    if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai||0,ca:r.ca||'',gr:r.gr||'',no:r.no||'',...(r.lv!=null?{lv:r.lv,due:r.due}:{}),r:recs,t:r.t,nm:r.name||''};changed=true}
+    if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai??null,ca:r.ca||'',gr:r.gr||'',no:r.no||'',...(r.lv!=null?{lv:r.lv,due:r.due}:{}),r:recs,t:r.t,nm:r.name||''};changed=true}
     else if(recs.length!==(loc.r||[]).length){loc.r=recs;changed=true}}
   return changed}
 let syncing=false;
@@ -598,7 +598,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v11 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v12 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
