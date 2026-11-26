@@ -311,7 +311,7 @@ const svgOf=c=>c.v.replace(/#777/g,'#5b5751').replace(/#fafafa/g,'#ece6da').repl
 const img=c=>{const k=(c._k||S.cur)+c.id+(isNeg()?'n':'');return IMG[k]||(IMG[k]='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgOf(c)))};
 const pair=c=>c&&c.x!=null?byId(c.x):null;
 const own=c=>c;
-const myAlg=c0=>{const c=own(c0),u=peek(c.id);return u.ai===-1&&u.ca?u.ca:(c.a[u.ai]||c.a[0]||'')};
+const myAlg=c0=>{const c=own(c0),u=peek(c.id);if(typeof u.ai==='string'&&u.ai[0]==='k'){const o=(c.k||[])[+u.ai.slice(1)];if(o)return o.a}return u.ai===-1&&u.ca?u.ca:(c.a[u.ai]||((c.k||[])[0]||{}).a||c.a[0]||'')};
 const cases=()=>D[S.cur]||[];
 const byId=id=>cases().find(c=>c.id===+id);
 
@@ -332,7 +332,7 @@ const f2=ms=>ms==null?'—':(ms/1000).toFixed(2);
 /* ---- load ---- */
 const negSvg=v=>v.replace(/#222/g,'@@').replace(/#fafafa/g,'#222').replace(/@@/g,'#fafafa');
 async function load(k){if(D[k])return;try{const r=await fetch(SRC[k]);let d=await r.json();
-  if(k==='OBL'){const out=[];d.forEach(c=>{out.push(c);if(!c.ident)out.push({id:-c.id,n:c.n+' (neg)',g:c.g,a:c.a,s:c.ns,v:negSvg(c.v),x:c.nx,neg:true,base:c})});d=out}
+  if(k==='OBL'){const out=[];d.forEach(c=>{out.push(c);if(!c.ident)out.push({id:-c.id,n:c.n+' (neg)',g:c.g,a:c.a,k:c.kn||[],s:c.ns,v:negSvg(c.v),x:c.nx,neg:true,base:c})});d=out}
   d.forEach(c=>c._k=k);D[k]=d;let mig=false;(S.folders||[]).forEach(f=>{if(f.set===k&&f.q){f.ids=fMembers(f).map(c=>c.id);f.ex=[];f.q='';mig=true}});if(mig)save()}catch(e){D[k]=null}}
 async function switchSet(k){S.cur=k;save();renderChips();renderPractice();$('groups').innerHTML='<div class="empty">Cargando casos…</div>';await load(k);if(!D[k]){$('groups').innerHTML='<div class="empty">No se pudieron cargar los casos.</div>';return}editF=activeF();ensureToday();pick();renderSelector();renderStats();showCase();renderLearn()}
 function renderChips(){document.querySelectorAll('.oblOnly').forEach(el=>el.style.display=S.cur==='OBL'?'':'none');document.querySelectorAll('.setChips').forEach(el=>el.innerHTML=SETS.map(k=>`<button class="chip${S.cur===k?' on':''}" data-set="${k}">${k}</button>`).join(''))}
@@ -362,6 +362,7 @@ function openDet(id){const c=byId(id);if(!c)return;det=c;const u=ud(c.id),uo=ud(
   <h2 style="margin-top:16px">Estado</h2><div class="row">${ST.map(s=>`<button class="st ${s}${u.st===s?' on':''}" data-dst="${s}">${STL[s]}</button>`).join('')}</div>
   <h2 style="margin-top:16px">Mi algoritmo</h2>
   ${c.neg?`<p class="note">Los algoritmos de ${esc(c.base.n)} también resuelven este negativo. Tu elección y tu agarre aquí son independientes del caso normal.</p>`:''}
+  ${(c.k||[]).length?`<p class="note" style="margin:4px 0 2px">De la hoja de Carnot · dejan negro arriba</p>`+c.k.map((o,i)=>`<label class="alg"><input type="radio" name="alg" value="k${i}"${uo.ai==='k'+i?' checked':''}><span>${esc(o.a)}<span class="lbl" style="display:block">${esc(o.h||'')}${o.m?' · principal':''}${o.t?' (del trainer)':''}</span></span></label>`).join('')+`<p class="note" style="margin:10px 0 2px">Otros del trainer</p>`:''}
   ${c.a.map((a,i)=>/^\[[^\]]*x2/.test(a)&&uo.ai!==i?'':`<label class="alg"><input type="radio" name="alg" value="${i}"${uo.ai===i?' checked':''}><span>${esc(a)}</span></label>`).join('')}
   <label class="alg"><input type="radio" name="alg" value="-1"${uo.ai===-1?' checked':''}><span style="flex:1">Propio<input type="text" id="dCa" value="${esc(uo.ca)}" placeholder="Escribe tu algoritmo" style="margin-top:6px"></span></label>
   <h2 style="margin-top:16px">Agarre</h2><p class="note">Posición de tus manos al empezar el algoritmo; la verás en el Drill.</p>
@@ -371,7 +372,7 @@ function openDet(id){const c=byId(id);if(!c)return;det=c;const u=ud(c.id),uo=ud(
   $('sheet').classList.add('on');$('sheetIn').scrollTop=0;$('dClose').focus({preventScroll:true})}
 function closeDet(){if(!det)return;const u=ud(det.id),uo=ud(own(det).id);uo.ca=$('dCa').value.trim();u.no=$('dNo').value;if(uo.ai===-1&&!uo.ca)uo.ai=0;save();const id=det.id;det=null;$('sheet').classList.remove('on');refreshTile(id);renderStats()}
 $('sheet').addEventListener('click',e=>{const gb=e.target.closest('[data-dgr]');if(gb&&det){ud(own(det).id).gr=gb.dataset.dgr;save();$('sheetIn').querySelectorAll('[data-dgr]').forEach(x=>x.classList.toggle('on',x===gb));showCase();return}if(fed){folderClick(e);return}if(e.target.id==='sheet'||e.target.id==='dClose')return closeDet();const pb=e.target.closest('[data-dpair]');if(pb){const id=pb.dataset.dpair;closeDet();openDet(id);return}const b=e.target.closest('[data-dst]');if(b){ud(det.id).st=b.dataset.dst;save();$('sheetIn').querySelectorAll('[data-dst]').forEach(x=>x.classList.toggle('on',x===b))}});
-$('sheet').addEventListener('change',e=>{if(fed){if(e.target.id==='fNoNeg'){fed.d.noNeg=e.target.checked;fPrev()}return}if(!det)return;const u=ud(det.id);if(e.target.id==='dSel'){u.sel=e.target.checked;save();renderSelector();pick();showCase()}else if(e.target.name==='alg'){ud(own(det).id).ai=+e.target.value;save()}});
+$('sheet').addEventListener('change',e=>{if(fed){if(e.target.id==='fNoNeg'){fed.d.noNeg=e.target.checked;fPrev()}return}if(!det)return;const u=ud(det.id);if(e.target.id==='dSel'){u.sel=e.target.checked;save();renderSelector();pick();showCase()}else if(e.target.name==='alg'){const v=e.target.value;ud(own(det).id).ai=v[0]==='k'?v:+v;save();if(cur&&cur.id===det.id)renderPeek()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(fed)closeFolder();else if(det)closeDet()}});
 
 /* ---- carpetas ---- */
@@ -597,7 +598,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v10 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v11 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
