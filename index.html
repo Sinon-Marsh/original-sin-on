@@ -293,7 +293,7 @@ const isNeg=()=>false;
 const svgOf=c=>c.v.replace(/#777/g,'#5b5751').replace(/#fafafa/g,'#ece6da').replace(/#222/g,'#121212');
 const img=c=>{const k=(c._k||S.cur)+c.id+(isNeg()?'n':'');return IMG[k]||(IMG[k]='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgOf(c)))};
 const pair=c=>c&&c.x!=null?byId(c.x):null;
-const own=c=>c.neg?c.base:c;
+const own=c=>c;
 const myAlg=c0=>{const c=own(c0),u=peek(c.id);return u.ai===-1&&u.ca?u.ca:(c.a[u.ai]||c.a[0]||'')};
 const cases=()=>D[S.cur]||[];
 const byId=id=>cases().find(c=>c.id===+id);
@@ -344,7 +344,7 @@ function openDet(id){const c=byId(id);if(!c)return;det=c;const u=ud(c.id),uo=ud(
   <label class="ck" style="margin-top:14px"><input type="checkbox" id="dSel"${u.sel?' checked':''}>Incluir en el drill</label>
   <h2 style="margin-top:16px">Estado</h2><div class="row">${ST.map(s=>`<button class="st ${s}${u.st===s?' on':''}" data-dst="${s}">${STL[s]}</button>`).join('')}</div>
   <h2 style="margin-top:16px">Mi algoritmo</h2>
-  ${c.neg?`<p class="note">Mismos movimientos que ${esc(own(c).n)}: solo terminas con el otro color arriba. Tu elección se comparte con ese caso.</p>`:''}
+  ${c.neg?`<p class="note">Los algoritmos de ${esc(c.base.n)} también resuelven este negativo. Tu elección y tu agarre aquí son independientes del caso normal.</p>`:''}
   ${c.a.map((a,i)=>/^\[[^\]]*x2/.test(a)&&uo.ai!==i?'':`<label class="alg"><input type="radio" name="alg" value="${i}"${uo.ai===i?' checked':''}><span>${esc(a)}</span></label>`).join('')}
   <label class="alg"><input type="radio" name="alg" value="-1"${uo.ai===-1?' checked':''}><span style="flex:1">Propio<input type="text" id="dCa" value="${esc(uo.ca)}" placeholder="Escribe tu algoritmo" style="margin-top:6px"></span></label>
   <h2 style="margin-top:16px">Agarre</h2><p class="note">Posición de tus manos al empezar el algoritmo; la verás en el Drill.</p>
@@ -548,7 +548,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>sync());
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v7 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v8 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
