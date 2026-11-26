@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Original Sin-on</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<meta name="theme-color" content="#050505">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/cormorant-garamond-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:500;font-display:swap;src:url(assets/fonts/cormorant-garamond-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/cormorant-garamond-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:400;font-display:swap;src:url(assets/fonts/cormorant-garamond-latin-400-italic.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:500;font-display:swap;src:url(assets/fonts/cormorant-garamond-latin-500-italic.woff2) format('woff2')}
+@font-face{font-family:Inter;font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/inter-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:Inter;font-style:normal;font-weight:500;font-display:swap;src:url(assets/fonts/inter-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:Inter;font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/inter-latin-600-normal.woff2) format('woff2')}
+</style>
+<style>
+/* VOICE: devocional y silencioso; un grabado barroco visto a la luz de una vela.
+   IDEA: lámina de grabado: tinta sobre negro, ornamentos de espinas y aureolas, un brillo tenue en el centro.
+   PICTURE: el cronómetro como relicario iluminado; los casos como pequeñas láminas enmarcadas.
+   COLOUR and TYPE: negro profundo y hueso; rubor rosado (aprendiendo) y perla luminosa (dominado). Cormorant Garamond + Inter.
+   LAYOUT: una columna; enredaderas de espinas como separadores; marcos de líneas finas con esquinas ornamentales. */
+:root{color-scheme:light dark;
+ --bg:light-dark(#e9e2d4,#050505);--card:light-dark(#efe9dd,#0c0c0c);--ink:light-dark(#191614,#ece6da);
+ --mute:light-dark(#6c6458,#8a857c);--line:light-dark(#b9ae9b,#2a2826);--hair:light-dark(#8f8472,#4a4743);
+ --glow:light-dark(rgb(255 250 240/.0),rgb(255 255 255/.10));--halo:light-dark(rgb(25 22 20/.35),rgb(255 255 255/.55));
+ --acc:light-dark(#191614,#ece6da);--accInk:light-dark(#efe9dd,#050505);
+ --blush:light-dark(#a8605a,#d2a6a0);--pearl:light-dark(#3f5b4d,#f4f1ea);--bad:light-dark(#8d2f27,#c4685f);--hold:light-dark(#a8605a,#d2a6a0);--ok:var(--pearl)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif;overflow-x:clip;
+ background-image:radial-gradient(ellipse 70% 45% at 50% 0%,var(--glow),transparent 70%);background-attachment:fixed}
+h1,h2,.t,.serif{font-family:'Cormorant Garamond',Georgia,serif}
+*,*::before,*::after{font-variant-numeric:lining-nums!important;font-feature-settings:"lnum" 1!important}
+#time,td.num,th.num{font-variant-numeric:lining-nums tabular-nums!important;font-feature-settings:"lnum" 1,"tnum" 1!important}
+header{display:flex;flex-direction:column;align-items:center;gap:2px;padding:26px max(4vw,14px) 0;max-width:900px;margin:auto;text-align:center}
+h1{font-size:clamp(30px,8vw,44px);margin:0;font-weight:500;font-style:italic;line-height:1.05;letter-spacing:.01em}
+.sub{font-size:13px;color:var(--mute)}
+.logo{width:clamp(110px,32vw,150px);aspect-ratio:440/301;flex:none;background:var(--ink);-webkit-mask:url(assets/logo.png) center/contain no-repeat;mask:url(assets/logo.png) center/contain no-repeat;filter:drop-shadow(0 0 10px var(--halo)) drop-shadow(0 0 2px var(--halo));margin-bottom:8px}
+.vine{display:block;width:100%;max-width:520px;height:auto;margin:6px auto 0;color:var(--ink);opacity:.85}
+nav{display:flex;gap:4px;padding:14px max(3vw,10px);max-width:900px;margin:auto;overflow-x:auto;justify-content:safe center}
+nav button{padding:10px 13px!important;font-size:14px!important}
+nav button,.chip{font:500 15px Inter,sans-serif;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:10px 18px;min-height:44px;cursor:pointer;flex:none;transition:box-shadow .3s,background .3s}
+nav button[aria-selected=true],.chip.on{background:var(--acc);color:var(--accInk);border-color:var(--acc);box-shadow:0 0 18px -4px var(--halo)}
+main{max-width:900px;margin:auto;padding:0 max(4vw,14px) 56px}
+section{display:none}section.on{display:block}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px;margin-top:12px;position:relative}
+.scr{font:500 clamp(19px,4.8vw,26px)/1.4 Inter,sans-serif;text-align:center;word-spacing:3px;margin:6px 0 2px;letter-spacing:-.01em}
+.lbl{font-size:13px;color:var(--mute)}
+.c{text-align:center}
+#pad{margin-top:12px;border-radius:4px;background:radial-gradient(circle at 50% 48%,var(--glow) 0,transparent 55%),var(--card);border:1px solid var(--line);min-height:42vh;display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;position:relative;overflow:hidden}
+#pad::before{content:"";position:absolute;inset:8px;border:1px solid var(--line);pointer-events:none}
+#pad .corner{position:absolute;width:38px;height:38px;color:var(--hair);pointer-events:none}
+#pad .corner.tl{top:4px;left:4px}#pad .corner.tr{top:4px;right:4px;transform:scaleX(-1)}#pad .corner.bl{bottom:4px;left:4px;transform:scaleY(-1)}#pad .corner.br{bottom:4px;right:4px;transform:scale(-1)}
+#time{font:400 clamp(76px,23vw,150px)/1 'Cormorant Garamond',Georgia,serif;font-variant-numeric:lining-nums tabular-nums;position:relative;transition:color .2s,text-shadow .3s}
+#pad.hold #time{color:var(--blush)}
+#pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
+#pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
+#last{display:none}
+.lastgrid{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
+.lastgrid img{height:96px}
+.big{font:500 20px 'Cormorant Garamond',serif}
+.btn{font:500 15px Inter,sans-serif;min-height:44px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--accInk)}
+.btn.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:1px solid var(--ink);outline-offset:3px;box-shadow:0 0 14px var(--halo)}
+label.ck{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;font-size:15px;cursor:pointer}
+input[type=checkbox],input[type=radio]{width:18px;height:18px;accent-color:var(--ink);flex:none}
+input[type=text],input[type=search],textarea,select{width:100%;font:16px Inter,sans-serif;padding:10px 14px;border-radius:4px;border:1px solid var(--line);background:transparent;color:var(--ink);min-height:44px}
+select option{background:var(--card);color:var(--ink)}
+textarea{min-height:110px;resize:vertical}
+.tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,10em);gap:8px;margin-top:10px}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{flex:1;border:0;background:none;color:var(--ink);font:500 14px Inter,sans-serif;min-height:44px;padding:0 14px;cursor:pointer}
+.seg button.on{background:var(--acc);color:var(--accInk)}
+details.grp{border-top:1px solid var(--line);margin-top:6px}
+details.grp summary{padding:16px 4px 10px;font:500 italic 24px 'Cormorant Garamond',serif;cursor:pointer;display:flex;gap:10px;align-items:baseline;list-style:none}
+details.grp summary::-webkit-details-marker{display:none}
+details.grp summary::before{content:"✝";font-style:normal;font-size:14px;color:var(--mute);transition:transform .2s}
+details.grp[open] summary::before{transform:rotate(45deg)}
+details.grp summary .lbl{font:400 13px Inter,sans-serif;font-style:normal}
+.gbody{padding:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:10px}
+.tile{position:relative;border:1px solid var(--line);border-radius:3px;background:var(--card);overflow:hidden;transition:box-shadow .3s,border-color .3s}
+.tile.sel{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink),0 0 18px -2px var(--halo)}
+.tile .tg{display:block;width:100%;border:0;background:none;color:var(--ink);padding:10px 4px 6px;cursor:pointer;font:500 13px/1.2 'Cormorant Garamond',serif;text-align:center}
+.tile img{display:block;height:92px;margin:0 auto 5px}
+.tile.neg{background:light-dark(#ddd4c3,#000)}
+.tile .nm{display:block;overflow-wrap:anywhere}
+.tile .inf{position:absolute;top:2px;right:2px;width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--mute);font:italic 600 17px 'Cormorant Garamond',serif;cursor:pointer}
+.tile .ck2{position:absolute;top:5px;left:6px;width:20px;height:20px;color:var(--ink);font:16px/20px 'Cormorant Garamond',serif;text-align:center;display:none;text-shadow:0 0 8px var(--halo)}
+.tile.sel .ck2{display:block}
+.tile .bar{height:3px}
+.bar.pendiente{background:transparent}.bar.aprendiendo{background:var(--blush)}.bar.dominado{background:var(--pearl);box-shadow:0 0 10px var(--halo)}
+.st{font:500 14px Inter,sans-serif;border-radius:999px;padding:8px 16px;min-height:40px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.st.on.pendiente{background:var(--mute);color:var(--bg);border-color:var(--mute)}.st.on.aprendiendo{background:var(--blush);color:#1a0f0e;border-color:var(--blush)}.st.on.dominado{background:var(--pearl);color:var(--bg);border-color:var(--pearl);box-shadow:0 0 16px -2px var(--halo)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:13px;color:var(--mute);font-weight:500}
+td.num,th.num{text-align:right;font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
+td img{height:40px;vertical-align:middle;margin-right:8px}
+.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.sum div{border:1px solid var(--line);border-radius:3px;padding:10px;text-align:center;font-size:13px;color:var(--mute)}
+.sum b{display:block;font:500 34px/1.1 'Cormorant Garamond',serif;color:var(--ink)}
+.empty{color:var(--mute);text-align:center;padding:22px 8px;font:italic 18px 'Cormorant Garamond',serif}
+#sheet{position:fixed;inset:0;background:rgb(0 0 0/.7);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:10}
+#sheet.on{display:flex}
+#sheetIn{background:var(--card);color:var(--ink);width:min(640px,100%);max-height:90vh;overflow:auto;border:1px solid var(--line);border-bottom:0;border-radius:6px 6px 0 0;padding:20px max(4vw,16px) 28px}
+.dhead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.dhead img{height:150px}
+#dName{font-weight:500;font-style:italic}
+.alg{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:4px;margin-top:6px;cursor:pointer;font:500 15px Inter,sans-serif;overflow-wrap:anywhere}
+.alg:has(input:checked){border-color:var(--ink);box-shadow:0 0 14px -4px var(--halo)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;box-shadow:0 0 24px -4px var(--halo)}
+.toast.on{opacity:1}
+h2{font-size:24px;font-weight:500;font-style:italic;margin:0 0 8px}
+p.note{font-size:13px;color:var(--mute);margin:6px 0}
+a{color:inherit}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(max-width:600px){.sum{grid-template-columns:repeat(2,minmax(0,1fr))}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;color:var(--mute)}.stack td:empty{display:none}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<header>
+  <div class="logo" role="img" aria-label="Dos ángeles"></div>
+  <h1>Original Sin-on</h1>
+  <div class="sub">Square-1 · OBL · PBL</div>
+  <svg class="vine" data-vine viewBox="0 0 600 44" aria-hidden="true"></svg>
+</header>
+<nav role="tablist">
+  <button data-tab="selector" aria-selected="true">Selector</button>
+  <button data-tab="drill">Drill</button>
+  <button data-tab="stats">Stats</button>
+  <button data-tab="coach">Coach</button>
+  <button data-tab="datos">Datos</button>
+</nav>
+<main>
+<section id="selector" class="on">
+  <div class="row setChips"></div>
+  <div class="lbl" style="margin-top:14px">Carpetas</div>
+  <div class="row" id="fchips" style="margin-top:6px"></div>
+  <div class="card" id="fbar" hidden></div>
+  <div class="tools">
+    <input type="search" id="q" placeholder="Buscar caso (p. ej. Kite, Opp)">
+    <select id="fst" aria-label="Filtrar">
+      <option value="">Todos</option><option value="sel">Seleccionados</option><option value="norm">Solo normales</option><option value="negs">Solo negativos</option><option value="pendiente">Pendientes</option><option value="aprendiendo">Aprendiendo</option><option value="dominado">Dominados</option>
+    </select>
+  </div>
+  <div class="row oblOnly" style="margin-top:8px"><label class="ck"><input type="checkbox" id="negChk">Mostrar negativos</label><label class="ck"><input type="checkbox" id="pairChk">Seleccionar junto con su pareja x2</label></div>
+  <div class="row" style="margin-top:8px;justify-content:space-between">
+    <div class="seg" role="group" aria-label="Al tocar un caso"><button data-mode="sel" class="on">Tocar: seleccionar</button><button data-mode="st">Tocar: cambiar estado</button></div>
+    <div class="row"><button class="btn" id="selVis">Seleccionar visibles</button><button class="btn" id="unselVis">Quitar visibles</button></div>
+  </div>
+  <p class="note" id="selInfo"></p>
+  <div id="groups"><div class="empty">Cargando casos…</div></div>
+  <svg class="vine" data-vine viewBox="0 0 600 44" aria-hidden="true" style="margin-top:26px"></svg>
+  <p class="note c" style="margin-top:10px">Casos, algoritmos, scrambles e imágenes tomados de <a href="https://github.com/mihlefeld/Alg-Trainers" style="color:inherit">mihlefeld/Alg-Trainers</a> (GPL-3.0).</p>
+</section>
+
+<section id="drill">
+  <div class="row setChips"></div>
+  <div class="row" style="margin-top:8px"><label class="lbl" for="practice">Practicar</label><select id="practice" style="flex:1;width:auto"></select></div>
+  <div class="row" style="margin-top:8px"><label class="ck"><input type="checkbox" id="smart">Repaso inteligente</label><label class="ck"><input type="checkbox" id="skipDom">Excluir dominados</label></div>
+  <div class="row oblOnly" style="margin-top:8px"><span class="lbl">Neutralidad x2:</span><div class="seg" role="group" aria-label="Neutralidad x2"><button data-x2="off">Normal</button><button data-x2="mix">Mezclar</button><button data-x2="only">Solo x2</button></div></div>
+  <p class="note">y2 ya va incluido: cada scramble agrega giros aleatorios de 90° y 180° en ambas capas.</p>
+  <div class="card">
+    <div class="lbl c">Scramble</div><div class="c" id="flipNote" style="font-weight:600;color:var(--hold);display:none">Voltea el puzzle resuelto (x2, otro color arriba) y luego aplica:</div>
+    <div class="scr" id="scr">—</div>
+    <div class="lbl c" id="poolInfo"></div>
+  </div>
+  <div id="pad" role="button" tabindex="0" aria-label="Cronómetro: mantén presionado y suelta para iniciar, toca para detener">
+    <svg class="corner tl" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner tr" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner bl" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner br" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg>
+    <div id="time">0.00</div>
+    <div class="hint" id="hint">Mantén presionado y suelta para iniciar</div>
+  </div>
+  <div class="card" id="last">
+    <div class="lastgrid">
+      <img id="lastImg" alt="">
+      <div><div class="big" id="lastName"></div><div class="lbl" id="lastAlg" style="font:500 15px Inter,sans-serif;overflow-wrap:anywhere"></div></div>
+      <div class="t" style="font-size:34px;font-weight:500" id="lastTime"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn bad" id="failBtn">Marcar como fallo</button>
+      <button class="btn" id="delBtn">Borrar tiempo</button>
+      <button class="btn" id="detBtn">Detalles</button>
+      <button class="btn" id="skipBtn">Saltar caso</button>
+    </div>
+  </div>
+</section>
+
+<section id="stats">
+  <div class="row setChips"></div>
+  <div class="card"><div class="sum" id="sum"></div></div>
+  <div class="card"><p class="note" id="statScope"></p><p class="note">Casos con tiempos, del más lento al más rápido. Promedio de los últimos 12 intentos válidos.</p><div id="statTable"></div></div>
+</section>
+
+<section id="coach">
+  <div class="card">
+    <h2 id="planTitle">Plan del coach</h2>
+    <div id="planBox" class="empty">Todavía no hay un plan. Pídeme uno en el chat de Claude y aparecerá aquí.</div>
+    <div id="planFocus" class="grid" hidden></div>
+    <div class="row" id="planBtns" style="margin-top:12px" hidden><button class="btn pri" id="planPlay">Practicar el plan</button></div>
+    <p class="note" id="planDate"></p>
+  </div>
+  <div class="card">
+    <h2>Habla con tu coach</h2>
+    <p class="note">Cuando tengas señal, abre Claude y dime <b>“revisa mi progreso”</b>. Leo lo que se sincronizó y te dejo aquí el plan; sin conexión sigues viendo el último.</p>
+    <p class="note" id="coachNote"></p>
+  </div>
+</section>
+
+<section id="datos">
+  <div class="card">
+    <h2>Sincronización</h2>
+    <p class="note" id="syncState">Sin configurar: tu progreso se guarda solo en este dispositivo.</p>
+    <p class="note">Tu progreso se guarda siempre aquí. Con señal se sincroniza con tu repositorio privado de GitHub: así lo compartes entre el teléfono y la PC, y tu coach lo puede leer.</p>
+    <label class="lbl" for="ghRepo" style="display:block;margin-top:10px">Repositorio de datos</label>
+    <input type="text" id="ghRepo" placeholder="usuario/original-sin-on-data" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <label class="lbl" for="ghToken" style="display:block;margin-top:10px">Token de GitHub</label>
+    <form onsubmit="return false"><input type="password" id="ghToken" placeholder="github_pat_…" autocomplete="off"></form>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="ghSave">Guardar y sincronizar</button><button class="btn" id="ghNow">Sincronizar ahora</button><button class="btn bad" id="ghForget">Olvidar token</button></div>
+  </div>
+  <div class="card" id="installCard" hidden>
+    <h2>Instalar app</h2>
+    <p class="note">Instala Original Sin-on con su ícono; abre y funciona sin internet.</p>
+    <button class="btn pri" id="installBtn">Instalar</button>
+  </div>
+  <div class="card">
+    <h2>Respaldo</h2>
+    <p class="note">Copia de todo tu progreso. También sirve para pasar tu progreso desde la versión de Claude.</p>
+    <div class="row"><button class="btn pri" id="exp">Copiar respaldo</button></div>
+    <textarea id="expBox" readonly style="margin-top:8px" aria-label="Respaldo"></textarea>
+  </div>
+  <div class="card">
+    <h2>Restaurar</h2>
+    <textarea id="impBox" placeholder="Pega aquí un respaldo"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn pri" id="imp">Restaurar respaldo</button></div>
+  </div>
+  <div class="card">
+    <h2>Borrar tiempos</h2>
+    <p class="note">Conserva selección, estados y algoritmos; elimina todos los tiempos.</p>
+    <button class="btn bad" id="wipe">Borrar todos los tiempos</button>
+  </div>
+</section>
+</main>
+
+<div id="sheet" role="dialog" aria-modal="true" aria-labelledby="dName"><div id="sheetIn"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+const KEY='sq1trainer.v2', ST=['pendiente','aprendiendo','dominado'], STL={pendiente:'Pendiente',aprendiendo:'Aprendiendo',dominado:'Dominado'};
+const SRC={OBL:'data/obl.json',PBL:'data/pbl.json'}, SETS=Object.keys(SRC);
+const PRE=["3,0","6,0","-3,0","0,-3","0,3","0,6","3,3","3,-3","3,6","6,3","6,-3","6,6","-3,3","-3,-3","-3,6","0,0"];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.u)S={cur:'OBL',smart:true,skipDom:false,u:{}};
+S.folders=S.folders||[];S.af=S.af||{};
+SETS.forEach(k=>S.u[k]=S.u[k]||{});
+let db=null,pushT=0,pushing=false,pushAgain=false;const syncCache={},localCache={};let meta0=null,metaL=null;
+let gh={};try{gh=JSON.parse(localStorage.getItem('sq1trainer.gh'))||{}}catch(e){}
+const save=()=>{stampLocal();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};schedulePush()};
+const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1800)};
+const D={}, IMG={};
+const ud=id=>S.u[S.cur][id]||(S.u[S.cur][id]={sel:false,st:'pendiente',ai:0,ca:'',no:'',r:[]});
+const peek=id=>S.u[S.cur][id]||{sel:false,st:'pendiente',ai:0,ca:'',no:'',r:[]};
+const isNeg=()=>false;
+const svgOf=c=>c.v.replace(/#777/g,'#5b5751').replace(/#fafafa/g,'#ece6da').replace(/#222/g,'#121212');
+const img=c=>{const k=(c._k||S.cur)+c.id+(isNeg()?'n':'');return IMG[k]||(IMG[k]='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgOf(c)))};
+const pair=c=>c&&c.x!=null?byId(c.x):null;
+const own=c=>c.neg?c.base:c;
+const myAlg=c0=>{const c=own(c0),u=peek(c.id);return u.ai===-1&&u.ca?u.ca:(c.a[u.ai]||c.a[0]||'')};
+const cases=()=>D[S.cur]||[];
+const byId=id=>cases().find(c=>c.id===+id);
+
+/* ---- scramble ---- */
+const norm=x=>{x=((x%12)+12)%12;return x>6?x-12:x};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function addMove(part,mv){const m=part.match(/(-?\d+)\s*,\s*(-?\d+)/),p=mv.split(',').map(Number);const u=norm((m?+m[1]:0)+p[0]),d=norm((m?+m[2]:0)+p[1]);return u||d?`${u},${d}`:''}
+function scramble(c){const parts=rnd(c.s).split('/').map(x=>x.trim());parts[0]=addMove(parts[0],rnd(PRE));parts[parts.length-1]=addMove(parts[parts.length-1],rnd(PRE));return parts.join(' / ').trim()}
+
+/* ---- stats ---- */
+const okT=u=>u.r.filter(x=>x.ok).map(x=>x.ms);
+const avg=u=>{const t=okT(u).slice(-12);return t.length?t.reduce((a,b)=>a+b,0)/t.length:null};
+const avgX2=u=>{const t=u.r.filter(x=>x.ok&&x.x2).map(x=>x.ms).slice(-12);return t.length?t.reduce((a,b)=>a+b,0)/t.length:null};
+const best=u=>{const t=okT(u);return t.length?Math.min(...t):null};
+const failRate=u=>{const r=u.r.slice(-10);return r.length?r.filter(x=>!x.ok).length/r.length:0};
+const f2=ms=>ms==null?'—':(ms/1000).toFixed(2);
+
+/* ---- load ---- */
+const negSvg=v=>v.replace(/#222/g,'@@').replace(/#fafafa/g,'#222').replace(/@@/g,'#fafafa');
+async function load(k){if(D[k])return;try{const r=await fetch(SRC[k]);let d=await r.json();
+  if(k==='OBL'){const out=[];d.forEach(c=>{out.push(c);if(!c.ident)out.push({id:-c.id,n:c.n+' (neg)',g:c.g,a:c.a,s:c.ns,v:negSvg(c.v),x:c.nx,neg:true,base:c})});d=out}
+  d.forEach(c=>c._k=k);D[k]=d;let mig=false;(S.folders||[]).forEach(f=>{if(f.set===k&&f.q){f.ids=fMembers(f).map(c=>c.id);f.ex=[];f.q='';mig=true}});if(mig)save()}catch(e){D[k]=null}}
+async function switchSet(k){S.cur=k;save();renderChips();renderPractice();$('groups').innerHTML='<div class="empty">Cargando casos…</div>';await load(k);if(!D[k]){$('groups').innerHTML='<div class="empty">No se pudieron cargar los casos.</div>';return}editF=activeF();pick();renderSelector();renderStats();showCase()}
+function renderChips(){document.querySelectorAll('.oblOnly').forEach(el=>el.style.display=S.cur==='OBL'?'':'none');document.querySelectorAll('.setChips').forEach(el=>el.innerHTML=SETS.map(k=>`<button class="chip${S.cur===k?' on':''}" data-set="${k}">${k}</button>`).join(''))}
+
+/* ---- selector ---- */
+let mode='sel';
+function visible(){const q=$('q').value.trim().toLowerCase(),f=$('fst').value,FF=f.startsWith('f:')?fById(f.slice(2)):null;return cases().filter(c=>{const u=peek(c.id);if(FF&&!inF(FF,c))return false;if(q&&!c.n.toLowerCase().includes(q)&&!c.g.toLowerCase().includes(q))return false;if(c.neg&&S.showNeg===false)return false;if(f==='sel')return u.sel;if(f==='norm')return !c.neg;if(f==='negs')return !!c.neg;if(f&&!FF)return u.st===f;return true})}
+function tileHTML(c){const u=peek(c.id);return `<div class="tile${(editF?inF(editF,c):u.sel)?' sel':''}${c.neg?' neg':''}" data-tile="${c.id}"><span class="ck2">✦</span><button class="tg" data-tg="${c.id}"><img loading="lazy" alt="" src="${img(c)}"><span class="nm">${esc(c.n)}</span></button><button class="inf" data-inf="${c.id}" aria-label="Detalles de ${esc(c.n)}">i</button><div class="bar ${u.st}"></div></div>`}
+function renderSelector(){const vis=visible(),groups=[];vis.forEach(c=>{let g=groups.find(x=>x.n===c.g);if(!g)groups.push(g={n:c.g,cs:[]});g.cs.push(c)});
+  const filtered=$('q').value.trim()||$('fst').value, openAll=filtered||S.cur==='OBL';
+  $('groups').innerHTML=groups.length?groups.map((g,i)=>{const ns=g.cs.filter(c=>editF?inF(editF,c):peek(c.id).sel).length;const op=openAll||openG.has(g.n);
+    return `<details class="grp" data-g="${esc(g.n)}"${op?' open':''}><summary>${esc(g.n)} <span class="lbl gcount">${g.cs.length} casos · ${ns} ${editF?'en la carpeta':'seleccionados'}</span></summary><div class="gbody"><div class="row"><button class="btn" data-gall="${esc(g.n)}">Seleccionar grupo</button><button class="btn" data-gnone="${esc(g.n)}">Quitar grupo</button></div><div class="grid">${op?g.cs.map(tileHTML).join(''):''}</div></div></details>`}).join(''):'<div class="empty">Ningún caso coincide.</div>';
+  updInfo();renderFbar()}
+function updCounts(){const vis=visible();document.querySelectorAll('details.grp').forEach(d=>{const cs=vis.filter(c=>c.g===d.dataset.g),ns=cs.filter(c=>editF?inF(editF,c):peek(c.id).sel).length,el=d.querySelector('.gcount');if(el)el.textContent=`${cs.length} casos · ${ns} ${editF?'en la carpeta':'seleccionados'}`})}
+function updInfo(){updCounts();const all=cases();$('selInfo').textContent=editF?`${fMembers(editF).length} casos en la carpeta «${editF.name}»`:`${all.filter(c=>peek(c.id).sel).length} de ${all.length} casos seleccionados para el drill`}
+const openG=new Set();
+$('groups').addEventListener('toggle',e=>{const d=e.target;if(!d.matches('details.grp'))return;const g=d.dataset.g;if(d.open){openG.add(g);const gr=d.querySelector('.grid');if(!gr.children.length)gr.innerHTML=visible().filter(c=>c.g===g).map(tileHTML).join('')}else openG.delete(g)},true);
+function refreshTile(id){const el=document.querySelector(`[data-tile="${id}"]`);if(el)el.outerHTML=tileHTML(byId(id))}
+function setSel(list,v){if(editF){list.forEach(c=>setF(editF,c,v));save();renderSelector();pick();showCase();return}list.forEach(c=>{ud(c.id).sel=v;const p=S.pairSel&&S.cur==='OBL'?pair(c):null;if(p)ud(p.id).sel=v});save();renderSelector();pick();showCase()}
+
+/* ---- detail sheet ---- */
+let det=null;
+function openDet(id){const c=byId(id);if(!c)return;det=c;const u=ud(c.id),uo=ud(own(c).id);
+  $('sheetIn').innerHTML=`<div class="dhead"><img alt="" src="${img(c)}"><div><h2 id="dName" style="font-size:30px;margin:0">${esc(c.n)}</h2><div class="lbl">${esc(S.cur)} · ${esc(c.g)}</div>
+  <div class="lbl" style="margin-top:6px">Promedio ${f2(avg(u))} · Mejor ${f2(best(u))} · ${u.r.length} intentos</div></div></div>
+  <label class="ck" style="margin-top:14px"><input type="checkbox" id="dSel"${u.sel?' checked':''}>Incluir en el drill</label>
+  ${(()=>{const p=pair(c);if(!p)return '';return p.id===c.id?`<p class="note" style="margin-top:12px">Con x2 se ve igual.</p>`:`<div class="row" style="margin-top:12px;gap:12px"><img alt="" src="${img(p)}" style="height:70px"><div style="flex:1"><div class="lbl">Con x2 se ve como</div><div class="big">${esc(p.n)}</div></div><button class="btn" data-dpair="${p.id}">Abrir</button></div>`})()}
+  <h2 style="margin-top:16px">Estado</h2><div class="row">${ST.map(s=>`<button class="st ${s}${u.st===s?' on':''}" data-dst="${s}">${STL[s]}</button>`).join('')}</div>
+  <h2 style="margin-top:16px">Mi algoritmo</h2>
+  ${c.neg?`<p class="note">Mismos movimientos que ${esc(own(c).n)}: solo terminas con el otro color arriba. Tu elección se comparte con ese caso.</p>`:''}
+  ${c.a.map((a,i)=>`<label class="alg"><input type="radio" name="alg" value="${i}"${uo.ai===i?' checked':''}><span>${esc(a)}</span></label>`).join('')}
+  <label class="alg"><input type="radio" name="alg" value="-1"${uo.ai===-1?' checked':''}><span style="flex:1">Propio<input type="text" id="dCa" value="${esc(uo.ca)}" placeholder="Escribe tu algoritmo" style="margin-top:6px"></span></label>
+  <h2 style="margin-top:16px">Notas</h2><textarea id="dNo" placeholder="Reconocimiento, fingertricks…">${esc(u.no)}</textarea>
+  <div class="row" style="margin-top:14px"><button class="btn pri" id="dClose">Listo</button></div>`;
+  $('sheet').classList.add('on');$('sheetIn').scrollTop=0;$('dClose').focus({preventScroll:true})}
+function closeDet(){if(!det)return;const u=ud(det.id),uo=ud(own(det).id);uo.ca=$('dCa').value.trim();u.no=$('dNo').value;if(uo.ai===-1&&!uo.ca)uo.ai=0;save();const id=det.id;det=null;$('sheet').classList.remove('on');refreshTile(id);renderStats()}
+$('sheet').addEventListener('click',e=>{if(fed){folderClick(e);return}if(e.target.id==='sheet'||e.target.id==='dClose')return closeDet();const pb=e.target.closest('[data-dpair]');if(pb){const id=pb.dataset.dpair;closeDet();openDet(id);return}const b=e.target.closest('[data-dst]');if(b){ud(det.id).st=b.dataset.dst;save();$('sheetIn').querySelectorAll('[data-dst]').forEach(x=>x.classList.toggle('on',x===b))}});
+$('sheet').addEventListener('change',e=>{if(fed){if(e.target.id==='fNoNeg'){fed.d.noNeg=e.target.checked;fPrev()}return}if(!det)return;const u=ud(det.id);if(e.target.id==='dSel'){u.sel=e.target.checked;save();renderSelector();pick();showCase()}else if(e.target.name==='alg'){ud(own(det).id).ai=+e.target.value;save()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(fed)closeFolder();else if(det)closeDet()}});
+
+/* ---- carpetas ---- */
+let editF=null,fed=null;
+const fById=id=>S.folders.find(f=>f.id===id);
+const fTerms=f=>(f.q||'').toLowerCase().split(',').map(t=>t.trim()).filter(Boolean);
+function inF(f,c){if((f.ex||[]).includes(c.id))return false;if((f.ids||[]).includes(c.id))return true;const t=fTerms(f);if(!t.length||(c.neg&&f.noNeg))return false;const n=c.n.toLowerCase();return t.some(x=>n.includes(x))}
+const fMembers=f=>(D[f.set]||[]).filter(c=>inF(f,c));
+function toggleF(f,c){f.ids=f.ids||[];f.ex=f.ex||[];if(inF(f,c)){f.ids=f.ids.filter(i=>i!==c.id);if(inF(f,c))f.ex.push(c.id)}else{f.ex=f.ex.filter(i=>i!==c.id);if(!inF(f,c))f.ids.push(c.id)}}
+function setF(f,c,v){if(inF(f,c)!==v)toggleF(f,c)}
+function activeF(){const f=fById(S.af[S.cur]);return f&&f.set===S.cur?f:null}
+function goTab(t){const b=document.querySelector(`nav [data-tab="${t}"]`);if(b)b.click()}
+function renderPractice(){const sel=$('practice');if(!sel)return;const fs=S.folders.filter(f=>f.set===S.cur);
+  sel.innerHTML=`<option value="">Mi selección</option>`+fs.map(f=>`<option value="${esc(f.id)}">Carpeta: ${esc(f.name)}</option>`).join('');sel.value=activeF()?S.af[S.cur]:'';
+  const fst=$('fst'),v=fst.value;fst.querySelectorAll('option[data-f]').forEach(o=>o.remove());fs.forEach(f=>{const o=document.createElement('option');o.value='f:'+f.id;o.dataset.f=1;o.textContent='Carpeta: '+f.name;fst.appendChild(o)});fst.value=[...fst.options].some(o=>o.value===v)?v:''}
+$('practice').onchange=e=>{S.af[S.cur]=e.target.value||null;editF=activeF();save();renderSelector();pick();showCase();renderStats()};
+async function refreshFolders(){renderFolders();const need=[...new Set(S.folders.map(f=>f.set))].filter(k=>!D[k]);if(need.length){await Promise.all(need.map(load));renderFolders()}}
+function renderFolders(){const fc=$('fchips');if(!fc)return;const fs=S.folders.filter(f=>f.set===S.cur);
+  fc.innerHTML=`<button class="chip${editF?'':' on'}" data-fgo="">Mi selección</button>`+fs.map(f=>`<button class="chip${editF===f?' on':''}" data-fgo="${esc(f.id)}">${esc(f.name)} · ${D[f.set]?fMembers(f).length:'…'}</button>`).join('')+`<button class="chip" id="newF">+ Nueva carpeta</button>`}
+function enterFolder(f){editF=f||null;S.af[S.cur]=f?f.id:null;save();mode='sel';document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x.dataset.mode==='sel'));renderSelector();renderPractice();pick();showCase();renderStats()}
+async function practiceF(id){const f=fById(id);if(!f)return;if(S.cur!==f.set){lastRec=null;$('last').style.display='none';await switchSet(f.set)}S.af[f.set]=f.id;save();renderPractice();pick();showCase();renderStats();goTab('drill')}
+function openFolder(f,isNew){fed={o:f,isNew,d:{...f,ids:[...(f.ids||[])],ex:[...(f.ex||[])]},del:false};const d=fed.d;
+  $('sheetIn').innerHTML=`<h2 id="dName" style="font-size:30px;margin:0 0 10px">${isNew?'Nueva carpeta':'Editar carpeta'}</h2>
+  <label class="lbl" for="fName">Nombre</label><input type="text" id="fName" value="${esc(d.name)}" placeholder="Birds">
+  <div class="lbl" style="margin-top:12px">Set</div><div class="seg" style="max-width:240px">${SETS.map(k=>`<button data-fset="${k}" class="${d.set===k?'on':''}">${k}</button>`).join('')}</div>
+  <div id="fPrev" style="margin-top:12px"></div>
+  <div class="row" style="margin-top:14px"><button class="btn pri" data-fsave>Guardar</button>${isNew?'':'<button class="btn bad" data-fdel>Eliminar</button>'}<button class="btn" data-fcancel>Cancelar</button></div>`;
+  $('sheet').classList.add('on');$('sheetIn').scrollTop=0;fPrev();if(isNew)$('fName').focus({preventScroll:true})}
+async function fPrev(){const d=fed&&fed.d;if(!d)return;if(!D[d.set])await load(d.set);if(!fed||fed.d!==d)return;const m=fMembers(d);
+  $('fPrev').innerHTML=`<div class="lbl">${m.length} casos${d.ids.length?` · ${d.ids.length} agregados a mano`:''}${d.ex.length?` · ${d.ex.length} quitados a mano`:''}</div><div class="row" style="gap:6px;margin-top:6px">${m.slice(0,24).map(c=>`<img alt="" title="${esc(c.n)}" src="${img(c)}" style="height:46px">`).join('')}${m.length>24?'<span class="lbl">…</span>':''}</div>`}
+function closeFolder(){fed=null;$('sheet').classList.remove('on')}
+function commitFolder(){const d=fed.d;d.name=$('fName').value.trim()||'Sin nombre';d.q='';
+  if(fed.isNew)S.folders.push(d);else{const o=fed.o;if(o.set!==d.set&&S.af[o.set]===o.id)S.af[o.set]=null;Object.assign(o,d)}save();const f=fed.isNew?d:fed.o;closeFolder();renderFolders();renderPractice();if(activeF()===f){pick();showCase();renderStats()}return f}
+async function folderClick(e){if(e.target.id==='sheet'||e.target.closest('[data-fcancel]'))return closeFolder();const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.fset){if(fed.d.set!==b.dataset.fset){fed.d.set=b.dataset.fset;fed.d.ids=[];fed.d.ex=[]}$('sheetIn').querySelectorAll('[data-fset]').forEach(x=>x.classList.toggle('on',x===b));fPrev();return}
+  if(b.hasAttribute('data-fsave')){const f=commitFolder();toast('Carpeta guardada');if(S.cur!==f.set)await switchSet(f.set);enterFolder(f);return}
+  if(b.hasAttribute('data-fpick')){const f=commitFolder();if(S.cur!==f.set)await switchSet(f.set);editF=f;mode='sel';document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x.dataset.mode==='sel'));goTab('selector');renderSelector();window.scrollTo(0,0);return}
+  if(b.hasAttribute('data-fdel')){if(!fed.del){fed.del=true;b.textContent='¿Seguro? Toca otra vez';return}const o=fed.o;S.folders=S.folders.filter(f=>f!==o);SETS.forEach(k=>{if(S.af[k]===o.id)S.af[k]=null});if(editF===o)editF=null;save();closeFolder();renderSelector();renderPractice();pick();showCase();renderStats();toast('Carpeta eliminada')}}
+$('sheet').addEventListener('input',e=>{if(!fed)return;if(e.target.id==='fQ'){fed.d.q=e.target.value;fPrev()}});
+function renderFbar(){renderFolders();const fb=$('fbar');fb.hidden=!editF;if(!editF)return;fb.innerHTML=`<div class="row" style="justify-content:space-between"><div style="flex:1;min-width:10em"><div class="big">${esc(editF.name)}</div><div class="lbl">${(n=>n+(n===1?' caso':' casos'))(fMembers(editF).length)} · toca un caso para agregarlo o quitarlo${editF.q?` · incluye “${esc(editF.q)}”`:''}</div></div><div class="row"><button class="btn" id="fEdit">Ajustes</button><button class="btn pri" id="fPlay">Practicar</button></div></div>`}
+
+/* ---- drill ---- */
+let cur=null,curScr='',lastId=null,curX2=false;
+function pool(){const F=activeF();return cases().filter(c=>{const u=peek(c.id);return (F?inF(F,c):u.sel)&&!(S.skipDom&&u.st==='dominado')})}
+function pick(){const p=pool();if(!p.length){cur=null;return}const cand=p.length>1?p.filter(c=>c.id!==lastId):p;
+  if(!S.smart){cur=rnd(cand)}else{const av=p.map(c=>avg(peek(c.id))).filter(x=>x!=null),mean=av.length?av.reduce((a,b)=>a+b,0)/av.length:0;
+    const w=cand.map(c=>{const u=peek(c.id),sw={pendiente:2,aprendiendo:3,dominado:1}[u.st],a=avg(u);const slow=a==null||!mean?1.6:Math.min(3,Math.max(.5,a/mean));return sw*slow*(1+2*failRate(u))});
+    let r=Math.random()*w.reduce((a,b)=>a+b,0);cur=cand[cand.length-1];for(let i=0;i<cand.length;i++){r-=w[i];if(r<=0){cur=cand[i];break}}}
+  const pp=S.cur==='OBL'?pair(cur):null;curX2=!!pp&&pp.id!==cur.id&&(S.x2==='only'||(S.x2==='mix'&&Math.random()<.5));
+  curScr=scramble(curX2?pp:cur)}
+function showCase(){const p=pool();const shown=cur?(curX2?pair(cur):cur):null;$('flipNote').style.display=shown&&shown.neg?'block':'none';$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
+const pad=$('pad'),tEl=$('time');let state='idle',t0=0,raf=0,holdT=0,justStopped=false,lastRec=null;
+function tick(){tEl.textContent=((performance.now()-t0)/1000).toFixed(2);raf=requestAnimationFrame(tick)}
+function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast('No hay casos seleccionados');return}
+  state='hold';pad.className='hold';tEl.textContent='0.00';holdT=setTimeout(()=>{if(state==='hold'){state='ready';pad.className='ready'}},300)}
+function up(){if(justStopped){justStopped=false;return}clearTimeout(holdT);
+  if(state==='ready'){state='run';pad.className='';t0=performance.now();$('hint').textContent='Toca para detener';tick()}else if(state==='hold'){state='idle';pad.className=''}}
+function stop(){cancelAnimationFrame(raf);const ms=Math.round(performance.now()-t0);state='idle';pad.className='';tEl.textContent=(ms/1000).toFixed(2);$('hint').textContent='Mantén presionado y suelta para iniciar';
+  const u=ud(cur.id),rec={ms,ok:true,d:Date.now(),x2:curX2};u.r.push(rec);if(u.r.length>60)u.r.shift();lastRec={c:cur,u,rec};
+  const seen=curX2?pair(cur):cur;
+  $('last').style.display='block';$('lastImg').src=img(seen);$('lastName').textContent=curX2?`${cur.n} con x2 (se ve como ${seen.n})`:cur.n;$('lastAlg').textContent=curX2?`x2 + ${myAlg(cur)}  ·  o directo: ${myAlg(seen)}`:myAlg(cur);$('lastTime').textContent=(ms/1000).toFixed(2);$('failBtn').textContent='Marcar como fallo';
+  lastId=cur.id;save();pick();showCase();renderStats()}
+pad.addEventListener('pointerdown',e=>{e.preventDefault();down()});
+pad.addEventListener('pointerup',e=>{e.preventDefault();up()});
+pad.addEventListener('pointercancel',()=>{clearTimeout(holdT);if(state!=='run'){state='idle';pad.className=''}});
+const inDrill=e=>$('drill').classList.contains('on')&&!det&&!fed&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&inDrill(e)){e.preventDefault();down()}});
+document.addEventListener('keyup',e=>{if(e.code==='Space'&&inDrill(e)){e.preventDefault();up()}});
+$('failBtn').onclick=()=>{if(!lastRec)return;lastRec.rec.ok=!lastRec.rec.ok;$('failBtn').textContent=lastRec.rec.ok?'Marcar como fallo':'Marcado como fallo ✕';save();renderStats()};
+$('delBtn').onclick=()=>{if(!lastRec)return;const i=lastRec.u.r.indexOf(lastRec.rec);if(i>-1)lastRec.u.r.splice(i,1);lastRec=null;$('last').style.display='none';save();renderStats();toast('Tiempo borrado')};
+$('detBtn').onclick=()=>{if(lastRec)openDet(lastRec.c.id)};
+$('skipBtn').onclick=()=>{if(cur)lastId=cur.id;pick();showCase()};
+
+/* ---- stats ---- */
+function renderStats(){const F=activeF();$('statScope').textContent=F?`Mostrando la carpeta «${F.name}». Cámbiala en Drill → Practicar.`:'';const all=F?fMembers(F):cases(),cnt=s=>all.filter(c=>peek(c.id).st===s).length;
+  $('sum').innerHTML=ST.map(s=>`<div><b>${cnt(s)}</b>${STL[s]}</div>`).join('')+`<div><b>${all.filter(c=>peek(c.id).sel).length}</b>Seleccionados</div>`;
+  const rows=all.filter(c=>peek(c.id).r.length).sort((a,b)=>(avg(peek(b.id))??-1)-(avg(peek(a.id))??-1));
+  $('statTable').innerHTML=rows.length?`<table class="stack"><thead><tr><th>Caso</th><th>Estado</th><th class="num">Promedio</th><th class="num">Prom. x2</th><th class="num">Mejor</th><th class="num">Intentos</th><th class="num">Fallos</th></tr></thead><tbody>${rows.map(c=>{const u=peek(c.id);return `<tr><td><img alt="" src="${img(c)}">${esc(c.n)}</td><td>${STL[u.st]}</td><td class="num">${f2(avg(u))}</td><td class="num">${f2(avgX2(u))}</td><td class="num">${f2(best(u))}</td><td class="num">${u.r.length}</td><td class="num">${Math.round(failRate(u)*100)}%</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">Aún no hay tiempos en este set.</div>'}
+
+/* ---- events ---- */
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.closest('#sheet'))return;
+  if(b.dataset.tab){document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('main section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab));if(b.dataset.tab==='datos')$('expBox').value=JSON.stringify(S);if(b.dataset.tab==='carpetas')refreshFolders();return}
+  if(b.dataset.fprac){practiceF(b.dataset.fprac);return}
+  if(b.dataset.fedit){const f=fById(b.dataset.fedit);if(f)openFolder(f);return}
+  if(b.dataset.fgo!==undefined){enterFolder(b.dataset.fgo?fById(b.dataset.fgo):null);return}
+  if(b.id==='fEdit'&&editF){openFolder(editF,false);return}
+  if(b.id==='fPlay'){goTab('drill');window.scrollTo(0,0);return}
+  if(b.id==='newF'){openFolder({id:'f'+Date.now().toString(36),name:'',set:S.cur,q:'',ids:[],ex:[],noNeg:false},true);return}
+  if(b.dataset.set){if(b.dataset.set!==S.cur){lastRec=null;$('last').style.display='none';switchSet(b.dataset.set)}return}
+  if(b.dataset.x2){S.x2=b.dataset.x2;save();document.querySelectorAll('[data-x2]').forEach(x=>x.classList.toggle('on',x===b));pick();showCase();return}
+  if(b.dataset.mode){mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));return}
+  if(b.dataset.tg&&editF&&mode==='sel'){toggleF(editF,byId(b.dataset.tg));save();refreshTile(b.dataset.tg);updInfo();renderFbar();if(activeF()===editF){pick();showCase()}return}
+  if(b.dataset.tg){const u=ud(b.dataset.tg);if(mode==='sel'){u.sel=!u.sel;const p=S.pairSel&&S.cur==='OBL'?pair(byId(b.dataset.tg)):null;if(p&&p.id!==+b.dataset.tg){ud(p.id).sel=u.sel;refreshTile(p.id)}}else u.st=ST[(ST.indexOf(u.st)+1)%3];save();refreshTile(b.dataset.tg);
+    if(mode==='sel'){updInfo();if(!cur||!pool().includes(cur)){pick();showCase()}else showCase()}else toast(STL[u.st]);renderStats();return}
+  if(b.dataset.inf){openDet(b.dataset.inf);return}
+  if(b.dataset.gall){setSel(visible().filter(c=>c.g===b.dataset.gall),true);return}
+  if(b.dataset.gnone){setSel(visible().filter(c=>c.g===b.dataset.gnone),false);return}
+});
+$('selVis').onclick=()=>setSel(visible(),true);
+$('unselVis').onclick=()=>setSel(visible(),false);
+$('q').addEventListener('input',renderSelector);$('fst').addEventListener('change',renderSelector);
+$('smart').checked=S.smart;$('negChk').checked=S.showNeg!==false;$('pairChk').checked=!!S.pairSel;S.x2=S.x2||'off';
+document.querySelectorAll('[data-x2]').forEach(x=>x.classList.toggle('on',x.dataset.x2===S.x2));
+$('negChk').onchange=e=>{S.showNeg=e.target.checked;save();renderSelector()};
+$('pairChk').onchange=e=>{S.pairSel=e.target.checked;save()};
+$('skipDom').checked=S.skipDom;
+$('smart').onchange=e=>{S.smart=e.target.checked;save()};
+$('skipDom').onchange=e=>{S.skipDom=e.target.checked;save();pick();showCase()};
+$('exp').onclick=()=>{const v=JSON.stringify(S);$('expBox').value=v;navigator.clipboard?.writeText(v).then(()=>toast('Respaldo copiado'),()=>{$('expBox').select();toast('Cópialo manualmente')})};
+$('imp').onclick=()=>{try{const d=JSON.parse($('impBox').value);if(!d.u)throw 0;S=d;S.folders=S.folders||[];S.af=S.af||{};SETS.forEach(k=>S.u[k]=S.u[k]||{});save();$('impBox').value='';switchSet(S.cur||'OBL');toast('Respaldo restaurado')}catch(e){toast('Ese respaldo no es válido')}};
+let wipeArm=false;$('wipe').onclick=()=>{if(!wipeArm){wipeArm=true;$('wipe').textContent='¿Seguro? Toca otra vez';return}SETS.forEach(k=>Object.values(S.u[k]).forEach(u=>u.r=[]));wipeArm=false;$('wipe').textContent='Borrar todos los tiempos';save();renderStats();toast('Tiempos borrados')};
+
+
+/* ---- ornaments: thorned vine ---- */
+function drawVines(){document.querySelectorAll('[data-vine]').forEach((svg,k)=>{let d='',th='';
+  const strand=(ph,amp,off)=>{let p='';for(let x=10;x<=590;x+=6){const y=22+off+amp*Math.sin(x/58+ph)+3*Math.sin(x/19+ph*2);p+=(x===10?'M':'L')+x+' '+y.toFixed(1)}return p};
+  d+=`<path d="${strand(0+k,8,0)}"/><path d="${strand(2.4+k,6,2)}" opacity=".7"/>`;
+  for(let x=24;x<580;x+=17+((x*7)%11)){const ph=(x%2?0+k:2.4+k),amp=x%2?8:6,off=x%2?0:2;const y=22+off+amp*Math.sin(x/58+ph)+3*Math.sin(x/19+ph*2);const up=(x*13)%3?-1:1;
+    th+=`<path d="M${x} ${y.toFixed(1)} l${((x%5)-2)} ${up*5}" />`}
+  const rose=(cx,cy)=>`<g transform="translate(${cx} ${cy})"><path d="M0 0c2-3 6-1 4 2-1 3-6 3-7 0-1-4 3-7 7-6 4 1 6 6 3 9"/></g>`;
+  svg.innerHTML=`<g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">${d}${th}${rose(220,14)}${rose(470,24)}</g>`})}
+drawVines();
+switchSet(SETS.includes(S.cur)?S.cur:'OBL');
+
+/* ---- sync with GitHub ---- */
+const GHK='sq1trainer.gh',PLANK='sq1trainer.plan';
+const saveGh=()=>{try{localStorage.setItem(GHK,JSON.stringify(gh))}catch(e){}};
+function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai||0,ca:u.ca||'',no:u.no||'',r:(u.r||[]).slice(-60)}}
+function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af})}
+function ckey(k,id){return k+'_'+id}
+function stampLocal(){const now=Date.now();for(const k of SETS)for(const [id,u] of Object.entries(S.u[k]||{})){const b=JSON.stringify(strip(u)),key=ckey(k,id);if(localCache[key]!==b){if(localCache[key]!==undefined||!u.t)u.t=now;localCache[key]=b}}
+  const m=metaOf();if(metaL!==m){if(metaL!==null||!S.mt)S.mt=now;metaL=m}}
+stampLocal();
+function syncMsg(t){$('syncState').textContent=t;$('coachNote').textContent=t}
+function schedulePush(){if(!gh.token||!gh.repo)return;clearTimeout(pushT);pushT=setTimeout(()=>sync(),20000)}
+function nameOf(k,id){const c=D[k]&&D[k].find(c=>String(c.id)===String(id));return c?c.n:''}
+const b64enc=str=>{const b=new TextEncoder().encode(str);let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)};
+const b64dec=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+const api=(path,opt={})=>fetch('https://api.github.com/repos/'+gh.repo+'/contents/'+path,{...opt,cache:'no-store',headers:{Authorization:'Bearer '+gh.token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(opt.headers||{})}});
+async function getFile(path){const r=await api(path);if(r.status===404)return {sha:null,data:null};if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();
+  let text;if(j.encoding==='base64'&&j.content)text=b64dec(j.content);else text=await (await api(path,{headers:{Accept:'application/vnd.github.raw+json'}})).text();
+  return {sha:j.sha,data:JSON.parse(text)}}
+async function putFile(path,obj,sha,msg){const r=await api(path,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,content:b64enc(JSON.stringify(obj)),...(sha?{sha}:{})})});
+  if(r.status===409||r.status===422)throw Object.assign(new Error('conflict'),{conflict:true});if(!r.ok)throw new Error('HTTP '+r.status);return (await r.json()).content.sha}
+function buildRemote(){const u={};for(const k of SETS){u[k]={};for(const [id,x] of Object.entries(S.u[k]||{})){const nm=nameOf(k,id)||x.nm||'';if(nm)x.nm=nm;u[k][id]={...strip(x),t:x.t||0,name:nm}}}
+  return {v:1,meta:{...JSON.parse(metaOf()),mt:S.mt||0},u}}
+function mergeRemote(R){let changed=false;const m=R.meta;
+  if(m&&(m.mt||0)>(S.mt||0)){Object.assign(S,{cur:SETS.includes(m.cur)?m.cur:S.cur,smart:!!m.smart,skipDom:!!m.skipDom,x2:m.x2||'off',showNeg:m.showNeg!==false,pairSel:!!m.pairSel,folders:m.folders||[],af:m.af||{},mt:m.mt});changed=true}
+  for(const k of SETS)for(const [id,r] of Object.entries((R.u||{})[k]||{})){const loc=S.u[k][id];
+    const seen=new Set(),recs=[...(loc&&loc.r||[]),...(r.r||[])].filter(x=>{const q=x.d+'_'+x.ms;if(seen.has(q))return false;seen.add(q);return true}).sort((a,b)=>a.d-b.d).slice(-60);
+    if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai||0,ca:r.ca||'',no:r.no||'',r:recs,t:r.t,nm:r.name||''};changed=true}
+    else if(recs.length!==(loc.r||[]).length){loc.r=recs;changed=true}}
+  return changed}
+let syncing=false;
+async function sync(){if(!gh.token||!gh.repo){syncMsg('Sin configurar: tu progreso se guarda solo en este dispositivo.');return}
+  if(!navigator.onLine){syncMsg('Sin conexión: se sincroniza cuando vuelva la señal.');return}
+  if(syncing)return;syncing=true;clearTimeout(pushT);syncMsg('Sincronizando…');
+  try{for(let i=0;i<3;i++){const f=await getFile('progress.json');const changed=f.data?mergeRemote(f.data):false;
+      if(changed){for(const k of SETS)for(const [id,u] of Object.entries(S.u[k])){localCache[ckey(k,id)]=JSON.stringify(strip(u))}metaL=metaOf();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+        $('smart').checked=S.smart;$('skipDom').checked=S.skipDom;$('negChk').checked=S.showNeg!==false;$('pairChk').checked=!!S.pairSel;
+        document.querySelectorAll('[data-x2]').forEach(x=>x.classList.toggle('on',x.dataset.x2===(S.x2||'off')));await switchSet(S.cur)}
+      stampLocal();const out=buildRemote();const same=f.data&&JSON.stringify({meta:f.data.meta,u:f.data.u})===JSON.stringify({meta:out.meta,u:out.u});
+      if(same)break;try{await putFile('progress.json',out,f.sha,'Progreso '+new Date().toISOString());break}catch(e){if(e.conflict&&i<2)continue;throw e}}
+    const p=await getFile('plan.json').catch(()=>({data:null}));if(p.data){try{localStorage.setItem(PLANK,JSON.stringify(p.data))}catch(e){}renderPlan(p.data)}
+    gh.last=Date.now();saveGh();syncMsg('Sincronizado · '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}))}
+  catch(e){const m=e.message||'';syncMsg(m==='HTTP 401'?'El token no es válido o ya venció.':m==='HTTP 403'?'El token no tiene permiso para escribir en ese repositorio.':m==='HTTP 404'?'No encuentro el repositorio: revisa el nombre y que el token tenga acceso.':/fetch|network/i.test(m)?'Sin conexión: se sincroniza cuando vuelva la señal.':'No se pudo sincronizar ('+m+').')}
+  syncing=false}
+
+/* ---- coach plan (written by Claude into plan.json) ---- */
+let plan=null;
+function renderPlan(p){plan=p&&p.text?p:null;$('planTitle').textContent=plan&&plan.title?plan.title:'Plan del coach';
+  if(!plan){$('planBox').className='empty';$('planBox').textContent='Todavía no hay un plan. Pídeme uno en el chat de Claude y aparecerá aquí.';$('planFocus').hidden=true;$('planBtns').hidden=true;$('planDate').textContent='';return}
+  $('planBox').className='';$('planBox').style.whiteSpace='pre-wrap';$('planBox').textContent=plan.text;
+  $('planDate').textContent=plan.updatedAt?'Actualizado el '+new Date(plan.updatedAt).toLocaleDateString('es-MX',{day:'numeric',month:'long'}):'';
+  const ids=(plan.focus||[]).map(Number),set=SETS.includes(plan.set)?plan.set:'OBL';$('planBtns').hidden=!ids.length;
+  const show=()=>{const cs=(D[set]||[]).filter(c=>ids.includes(c.id));$('planFocus').hidden=!cs.length;$('planFocus').innerHTML=cs.map(c=>`<div class="tile"><div class="tg"><img alt="" src="${img(c)}"><span class="nm">${esc(c.n)}</span></div></div>`).join('')};
+  if(D[set])show();else load(set).then(show)}
+$('planPlay').onclick=async()=>{if(!plan)return;const set=SETS.includes(plan.set)?plan.set:'OBL';let f=S.folders.find(f=>f.id==='coach');
+  if(!f){f={id:'coach',name:'',set,q:'',ids:[],ex:[],noNeg:false};S.folders.push(f)}Object.assign(f,{name:plan.title||'Plan del coach',set,ids:(plan.focus||[]).map(Number),q:'',ex:[]});
+  if(S.cur!==set)await switchSet(set);enterFolder(f);goTab('drill');window.scrollTo(0,0)};
+try{const cp=JSON.parse(localStorage.getItem(PLANK));if(cp)renderPlan(cp)}catch(e){}
+
+/* ---- settings, install, offline ---- */
+$('ghRepo').value=gh.repo||'';$('ghToken').value=gh.token?'••••••••':'';
+$('ghSave').onclick=()=>{const repo=$('ghRepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');const tk=$('ghToken').value.trim();
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){syncMsg('Escribe el repositorio como usuario/nombre.');return}gh.repo=repo;if(tk&&!/^•+$/.test(tk))gh.token=tk;if(!gh.token){syncMsg('Falta el token.');return}
+  saveGh();$('ghToken').value='••••••••';sync()};
+$('ghNow').onclick=()=>sync();
+$('ghForget').onclick=()=>{delete gh.token;saveGh();$('ghToken').value='';syncMsg('Token borrado de este dispositivo.')};
+window.addEventListener('online',()=>sync());
+document.addEventListener('visibilitychange',()=>sync());
+let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
+$('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+Promise.all(SETS.map(k=>load(k)));
+sync();
+}
+</script>
+</body>
+</html>
