@@ -65,6 +65,16 @@ section{display:none}section.on{display:block}
 #pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
 #pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
 #last{display:none}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:6px}.kpis div{border:1px solid var(--line);border-radius:3px;padding:10px 6px;text-align:center;font-size:12px;color:var(--mute)}
+.kpis b{display:block;font:500 30px/1.05 'Cormorant Garamond',serif;color:var(--ink)}
+@media(max-width:420px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stackBar{display:flex;gap:2px;height:14px;margin-top:6px}.stackBar span{height:100%;border-radius:2px;min-width:2px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:13px;color:var(--mute)}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.chartT{font:italic 500 18px 'Cormorant Garamond',serif;margin:18px 0 2px}
+#progCard .fig{position:relative;min-height:150px}#progCard .fig>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.tip{position:fixed;z-index:30;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:6px 9px;font-size:13px;color:var(--ink);box-shadow:0 0 18px -6px var(--halo);white-space:nowrap}
+.tdItem{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:start}.tdItem:first-child{border-top:0}
+.tdItem input{margin-top:3px}.tdItem.done .tdT{text-decoration:line-through;color:var(--mute)}.tdT{font:500 19px/1.2 'Cormorant Garamond',serif}.tdW{font-size:13px;color:var(--blush)}
 .rWrap{display:grid;place-items:center;min-height:max(40vh,calc(100svh - 420px))}.rImg{height:min(46vh,360px);width:auto}
 .rAns{margin-top:10px}#recog [hidden]{display:none!important}#recog .grip img{width:64px;height:64px}
 #drill.rmode .scrCard,#drill.rmode #pad,#drill.rmode #last{display:none!important}
@@ -236,6 +246,24 @@ a{color:inherit}
 </section>
 
 <section id="coach">
+  <div class="card" id="todayCard" hidden>
+    <h2>Hoy</h2>
+    <div id="todayList"></div>
+  </div>
+  <div class="card" id="progCard">
+    <h2>Progreso</h2>
+    <div class="kpis" id="kpis"></div>
+    <div class="lbl" style="margin-top:14px">Carpeta de aprendizaje</div>
+    <div class="stackBar" id="stackBar" role="img"></div>
+    <div class="legend" id="stackLeg"></div>
+    <div class="chartT">Solves por día · últimas 2 semanas</div>
+    <div class="fig" id="figAct"><svg aria-label="Solves por día"></svg></div>
+    <div class="chartT">Resultados “Bien” por día</div>
+    <div class="fig" id="figRet"><svg aria-label="Porcentaje de resultados Bien por día"></svg></div>
+    <div class="chartT">Tiempo promedio por caso (timer)</div>
+    <div class="fig" id="figTime"><svg aria-label="Tiempo promedio por día"></svg></div>
+    <div class="tip" id="tip" hidden></div>
+  </div>
   <div class="card" id="learnCard">
     <h2>Aprendizaje</h2>
     <p class="note" id="learnSum">Configura de qué carpeta aprender y cuántos casos nuevos por día.</p>
@@ -472,7 +500,7 @@ function renderStats(){const F=activeF();$('statScope').textContent=F?`Mostrando
 
 /* ---- events ---- */
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.closest('#sheet'))return;
-  if(b.dataset.tab==='coach')setTimeout(renderLearn);if(b.dataset.tab){document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('main section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab));if(b.dataset.tab==='datos')$('expBox').value=JSON.stringify(S);if(b.dataset.tab==='carpetas')refreshFolders();return}
+  if(b.dataset.tab==='coach'){setTimeout(renderLearn);setTimeout(renderToday);setTimeout(renderProgress,30)}if(b.dataset.tab){document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('main section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab));if(b.dataset.tab==='datos')$('expBox').value=JSON.stringify(S);if(b.dataset.tab==='carpetas')refreshFolders();return}
   if(b.dataset.fprac){practiceF(b.dataset.fprac);return}
   if(b.dataset.fedit){const f=fById(b.dataset.fedit);if(f)openFolder(f);return}
   if(b.dataset.fgo!==undefined){enterFolder(b.dataset.fgo?fById(b.dataset.fgo):null);return}
@@ -550,6 +578,61 @@ $('alwaysAlg').checked=!!S.alwaysAlg;$('alwaysAlg').onchange=e=>{S.alwaysAlg=e.t
 $('promoBtn').onclick=()=>{if(!lastRec)return;lastRec.u.st='dominado';save();$('promo').hidden=true;renderLearn();renderStats();if(isToday()){pick();showCase()}toast('Marcado como dominado')};
 
 
+
+/* ---- today's blocks (written by the coach into plan.json → today) ---- */
+function localDate(t){const d=t?new Date(t):new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function todayRecs(){const t=localDate(),out=[];for(const k of SETS)for(const u of Object.values(S.u[k]||{}))for(const r of (u.r||[]))if(localDate(r.d)===t)out.push(r);return out}
+function autoDone(b){const rs=todayRecs(),n=b.n||10;if(b.auto==='plan'){const L=learnCfg();return !!L.started&&L.day===today()&&dueList(L.set||'OBL').length===0}
+  if(b.auto==='timer')return rs.filter(r=>r.m!=='r').length>=n;if(b.auto==='recog')return rs.filter(r=>r.m==='r').length>=n;return false}
+function renderToday(){const T=plan&&plan.today;const show=T&&T.date===localDate()&&(T.blocks||[]).length;$('todayCard').hidden=!show;if(!show)return;
+  const man=(S.tdone&&S.tdone.date===T.date)?S.tdone.ids:[];
+  $('todayList').innerHTML=T.blocks.map((b,i)=>{const done=autoDone(b)||man.includes(b.id||String(i));return `<label class="tdItem${done?' done':''}"><input type="checkbox" data-td="${esc(b.id||String(i))}"${done?' checked':''}><div><div class="tdT">${esc(b.title)}</div>${b.window?`<div class="tdW">${esc(b.window)}</div>`:''}${b.desc?`<div class="lbl">${esc(b.desc)}</div>`:''}</div></label>`}).join('')}
+$('todayList').addEventListener('change',e=>{const id=e.target.dataset.td;if(!id||!plan||!plan.today)return;const dt=plan.today.date;if(!S.tdone||S.tdone.date!==dt)S.tdone={date:dt,ids:[]};
+  S.tdone.ids=e.target.checked?[...new Set([...S.tdone.ids,id])]:S.tdone.ids.filter(x=>x!==id);save();renderToday()});
+
+
+/* ---- progress charts ---- */
+function dayKey(t){return localDate(t)}
+function lastDays(n){const out=[];const d=new Date();d.setHours(12,0,0,0);for(let i=n-1;i>=0;i--){const x=new Date(d);x.setDate(d.getDate()-i);out.push(localDate(x.getTime()))}return out}
+function allRecs(){const out=[];for(const k of SETS)for(const u of Object.values(S.u[k]||{}))for(const r of (u.r||[]))out.push(r);return out}
+function progressData(){const days=lastDays(14),recs=allRecs(),by={};days.forEach(d=>by[d]={t:0,r:0,ok:0,g:0,ms:[]});
+  for(const r of recs){const k=dayKey(r.d);if(!by[k])continue;const b=by[k];if(r.m==='r')b.r++;else{b.t++;if(r.ok)b.ms.push(r.ms)}if(!r.pk){b.g++;if((r.f||(r.ok?'ok':'exe'))==='ok')b.ok++}}
+  let streak=0;const set=new Set(recs.map(r=>dayKey(r.d)));const d=new Date();d.setHours(12);if(!set.has(localDate(d.getTime())))d.setDate(d.getDate()-1);while(set.has(localDate(d.getTime()))){streak++;d.setDate(d.getDate()-1)}
+  return {days,by,streak}}
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function showTip(e,html){const t=$('tip');t.innerHTML=html;t.hidden=false;const w=t.offsetWidth;t.style.left=Math.max(8,Math.min(innerWidth-w-8,e.clientX-w/2))+'px';t.style.top=(e.clientY-44)+'px'}
+function hideTip(){$('tip').hidden=true}
+function drawBars(fig,vals,labels,tipFn){const svg=fig.querySelector('svg'),W=fig.clientWidth,H=fig.clientHeight,pad={l:28,r:4,t:8,b:22};if(!W)return;
+  const max=Math.max(4,...vals),n=vals.length,bw=(W-pad.l-pad.r)/n,ink=css('--ink'),mute=css('--mute'),line=css('--line');const y=v=>pad.t+(H-pad.t-pad.b)*(1-v/max);
+  const ticks=[0,Math.round(max/2),max];let h=ticks.map(t=>`<line x1="${pad.l}" x2="${W-pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="${line}" stroke-width="1"/><text x="${pad.l-6}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="${mute}">${t}</text>`).join('');
+  vals.forEach((v,i)=>{const x=pad.l+i*bw+1,w=Math.max(2,bw-2),top=y(v),hh=H-pad.b-top;if(v>0)h+=`<path d="M${x},${H-pad.b}V${top+Math.min(4,hh)}q0,-4 4,-4h${w-8}q4,0 4,4V${H-pad.b}Z" fill="${ink}" opacity=".85"/>`;
+    h+=`<rect x="${pad.l+i*bw}" y="${pad.t}" width="${bw}" height="${H-pad.t-pad.b}" fill="transparent" data-i="${i}"/>`;
+    if((n-1-i)%(W<420?4:2)===0)h+=`<text x="${pad.l+i*bw+bw/2}" y="${H-6}" text-anchor="middle" font-size="11" fill="${mute}">${labels[i]}</text>`});
+  svg.innerHTML=h;svg.onpointermove=e=>{const i=e.target.dataset&&e.target.dataset.i;if(i==null)return hideTip();showTip(e,tipFn(+i))};svg.onpointerleave=hideTip}
+function drawLine(fig,vals,labels,fmt,tipFn,minY,maxY){const svg=fig.querySelector('svg'),W=fig.clientWidth,H=fig.clientHeight,pad={l:34,r:8,t:10,b:22};if(!W)return;
+  const pts=vals.map((v,i)=>[i,v]).filter(p=>p[1]!=null),ink=css('--ink'),mute=css('--mute'),line=css('--line'),bg=css('--card');
+  if(!pts.length){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${mute}">Sin datos todavía</text>`;svg.onpointermove=null;return}
+  const lo=minY!=null?minY:Math.min(...pts.map(p=>p[1]))*0.9,hi=maxY!=null?maxY:Math.max(...pts.map(p=>p[1]),lo+1)*1.05,n=vals.length,x=i=>pad.l+(W-pad.l-pad.r)*(n<2?0.5:i/(n-1)),y=v=>pad.t+(H-pad.t-pad.b)*(1-(v-lo)/(hi-lo));
+  let h=[lo,(lo+hi)/2,hi].map(t=>`<line x1="${pad.l}" x2="${W-pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="${line}"/><text x="${pad.l-6}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="${mute}">${fmt(t)}</text>`).join('');
+  h+=`<path d="${pts.map((p,j)=>(j?'L':'M')+x(p[0]).toFixed(1)+','+y(p[1]).toFixed(1)).join('')}" fill="none" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>`;
+  h+=pts.map(p=>`<circle cx="${x(p[0])}" cy="${y(p[1])}" r="4" fill="${ink}" stroke="${bg}" stroke-width="2"/>`).join('');
+  labels.forEach((l,i)=>{if((n-1-i)%(W<420?4:2)===0)h+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle" font-size="11" fill="${mute}">${l}</text>`});
+  h+=`<line id="xh" x1="0" x2="0" y1="${pad.t}" y2="${H-pad.b}" stroke="${mute}" stroke-dasharray="3 3" opacity="0"/>`;svg.innerHTML=h;
+  svg.onpointermove=e=>{const r=svg.getBoundingClientRect(),px=e.clientX-r.left;let best=null;pts.forEach(p=>{if(!best||Math.abs(x(p[0])-px)<Math.abs(x(best[0])-px))best=p});const xh=svg.querySelector('#xh');xh.setAttribute('x1',x(best[0]));xh.setAttribute('x2',x(best[0]));xh.setAttribute('opacity',1);showTip(e,tipFn(best[0]))};
+  svg.onpointerleave=()=>{hideTip();const xh=svg.querySelector('#xh');if(xh)xh.setAttribute('opacity',0)}}
+function renderProgress(){if(!$('progCard')||!$('coach').classList.contains('on'))return;const P=progressData(),L=learnCfg(),k=L.set||'OBL';
+  const src=D[k]?srcCases(L):[],dom=src.filter(c=>peek(c.id).st==='dominado').length,lrn=src.filter(c=>peek(c.id).lv!=null&&peek(c.id).st!=='dominado').length,rest=src.length-dom-lrn;
+  const wk=P.days.slice(-7).reduce((a,d)=>({ok:a.ok+P.by[d].ok,g:a.g+P.by[d].g}),{ok:0,g:0}),tdy=P.by[P.days[13]];
+  $('kpis').innerHTML=[[`${dom}<span style="font-size:16px;color:var(--mute)">/${src.length}</span>`,'dominados'],[P.streak,P.streak===1?'día de racha':'días de racha'],[wk.g?Math.round(100*wk.ok/wk.g)+'%':'—','“Bien” (7 días)'],[tdy.t+tdy.r,'solves hoy']].map(([v,l])=>`<div><b>${v}</b>${l}</div>`).join('');
+  const seg=[[dom,'Dominados','var(--pearl)'],[lrn,'Aprendiendo','var(--blush)'],[rest,'Por empezar','var(--line)']];const tot=Math.max(1,src.length);
+  $('stackBar').innerHTML=seg.filter(s=>s[0]).map(s=>`<span style="flex:${s[0]/tot};background:${s[2]}" title="${s[1]}: ${s[0]}"></span>`).join('');$('stackBar').setAttribute('aria-label',seg.map(s=>s[1]+' '+s[0]).join(', '));
+  $('stackLeg').innerHTML=seg.map(s=>`<span><i style="background:${s[2]}"></i>${s[1]} ${s[0]}</span>`).join('');
+  const lab=P.days.map(d=>{const [,m,dd]=d.split('-');return +dd+'/'+(+m)});
+  drawBars($('figAct'),P.days.map(d=>P.by[d].t+P.by[d].r),lab,i=>{const b=P.by[P.days[i]];return `<b>${lab[i]}</b> · ${b.t+b.r} solves<br>${b.t} timer · ${b.r} reconocimiento`});
+  drawLine($('figRet'),P.days.map(d=>P.by[d].g?100*P.by[d].ok/P.by[d].g:null),lab,v=>Math.round(v)+'%',i=>{const b=P.by[P.days[i]];return `<b>${lab[i]}</b> · ${Math.round(100*b.ok/b.g)}% Bien<br>${b.ok} de ${b.g} sin ver el algoritmo`},0,100);
+  drawLine($('figTime'),P.days.map(d=>{const m=P.by[d].ms;return m.length?m.reduce((a,b)=>a+b,0)/m.length/1000:null}),lab,v=>v.toFixed(1)+'s',i=>{const b=P.by[P.days[i]];return `<b>${lab[i]}</b> · ${(b.ms.reduce((a,c)=>a+c,0)/b.ms.length/1000).toFixed(2)} s promedio<br>${b.ms.length} solves de timer`})}
+{const ro=new ResizeObserver(()=>renderProgress());['figAct','figRet','figTime'].forEach(id=>ro.observe($(id)))}
+
 /* ---- recognition mode ---- */
 let rT0=0;
 function applyMode(){const rm=S.dmode==='rec';$('drill').classList.toggle('rmode',rm);$('recog').hidden=!rm;document.querySelectorAll('[data-dm]').forEach(x=>x.classList.toggle('on',x.dataset.dm===(rm?'rec':'timer')));if(rm)renderRecog()}
@@ -566,7 +649,7 @@ applyMode();
 const GHK='sq1trainer.gh',PLANK='sq1trainer.plan';
 const saveGh=()=>{try{localStorage.setItem(GHK,JSON.stringify(gh))}catch(e){}};
 function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai??null,ca:u.ca||'',gr:u.gr||'',no:u.no||'',...(u.lv!=null?{lv:u.lv,due:u.due}:{}),r:(u.r||[]).slice(-60)}}
-function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af,learn:S.learn||null,alwaysAlg:!!S.alwaysAlg,dmode:S.dmode||'timer'})}
+function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af,learn:S.learn||null,alwaysAlg:!!S.alwaysAlg,dmode:S.dmode||'timer',tdone:S.tdone||null})}
 function ckey(k,id){return k+'_'+id}
 function stampLocal(){const now=Date.now();for(const k of SETS)for(const [id,u] of Object.entries(S.u[k]||{})){const b=JSON.stringify(strip(u)),key=ckey(k,id);if(localCache[key]!==b){if(localCache[key]!==undefined||!u.t)u.t=now;localCache[key]=b}}
   const m=metaOf();if(metaL!==m){if(metaL!==null||!S.mt)S.mt=now;metaL=m}}
@@ -585,7 +668,7 @@ async function putFile(path,obj,sha,msg){const r=await api(path,{method:'PUT',he
 function buildRemote(){const u={};for(const k of SETS){u[k]={};for(const [id,x] of Object.entries(S.u[k]||{})){const nm=nameOf(k,id)||x.nm||'';if(nm)x.nm=nm;u[k][id]={...strip(x),t:x.t||0,name:nm}}}
   return {v:1,meta:{...JSON.parse(metaOf()),mt:S.mt||0},u}}
 function mergeRemote(R){let changed=false;const m=R.meta;
-  if(m&&(m.mt||0)>(S.mt||0)){Object.assign(S,{cur:SETS.includes(m.cur)?m.cur:S.cur,smart:!!m.smart,skipDom:!!m.skipDom,x2:m.x2||'off',showNeg:m.showNeg!==false,pairSel:!!m.pairSel,folders:m.folders||[],af:m.af||{},learn:m.learn||S.learn,alwaysAlg:!!m.alwaysAlg,mt:m.mt});changed=true}
+  if(m&&(m.mt||0)>(S.mt||0)){Object.assign(S,{cur:SETS.includes(m.cur)?m.cur:S.cur,smart:!!m.smart,skipDom:!!m.skipDom,x2:m.x2||'off',showNeg:m.showNeg!==false,pairSel:!!m.pairSel,folders:m.folders||[],af:m.af||{},learn:m.learn||S.learn,alwaysAlg:!!m.alwaysAlg,tdone:m.tdone||S.tdone||null,dmode:m.dmode||S.dmode||'timer',mt:m.mt});changed=true}
   for(const k of SETS)for(const [id,r] of Object.entries((R.u||{})[k]||{})){const loc=S.u[k][id];
     const seen=new Set(),recs=[...(loc&&loc.r||[]),...(r.r||[])].filter(x=>{const q=x.d+'_'+x.ms;if(seen.has(q))return false;seen.add(q);return true}).sort((a,b)=>a.d-b.d).slice(-60);
     if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai??null,ca:r.ca||'',gr:r.gr||'',no:r.no||'',...(r.lv!=null?{lv:r.lv,due:r.due}:{}),r:recs,t:r.t,nm:r.name||''};changed=true}
@@ -608,7 +691,7 @@ async function sync(){if(!gh.token||!gh.repo){syncMsg('Sin configurar: tu progre
 
 /* ---- coach plan (written by Claude into plan.json) ---- */
 let plan=null;
-function renderPlan(p){plan=p&&p.text?p:null;$('planTitle').textContent=plan&&plan.title?plan.title:'Plan del coach';
+function renderPlan(p){plan=p&&(p.text||p.today)?p:null;setTimeout(renderToday);$('planTitle').textContent=plan&&plan.title?plan.title:'Plan del coach';
   if(!plan){$('planBox').className='empty';$('planBox').textContent='Todavía no hay un plan. Pídeme uno en el chat de Claude y aparecerá aquí.';$('planFocus').hidden=true;$('planBtns').hidden=true;$('planDate').textContent='';return}
   $('planBox').className='';$('planBox').style.whiteSpace='pre-wrap';$('planBox').textContent=plan.text;
   $('planDate').textContent=plan.updatedAt?'Actualizado el '+new Date(plan.updatedAt).toLocaleDateString('es-MX',{day:'numeric',month:'long'}):'';
@@ -631,7 +714,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v15 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v17 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
