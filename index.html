@@ -232,6 +232,11 @@ a{color:inherit}
     <form onsubmit="return false"><input type="password" id="ghToken" placeholder="github_pat_…" autocomplete="off"></form>
     <div class="row" style="margin-top:10px"><button class="btn pri" id="ghSave">Guardar y sincronizar</button><button class="btn" id="ghNow">Sincronizar ahora</button><button class="btn bad" id="ghForget">Olvidar token</button></div>
   </div>
+  <div class="card">
+    <h2>Versión</h2>
+    <p class="note">Instalada: <span id="appVer"></span>. Las actualizaciones se descargan solas cuando abres la app con internet y se aplican al momento.</p>
+    <button class="btn" id="updBtn">Buscar actualización</button>
+  </div>
   <div class="card" id="installCard" hidden>
     <h2>Instalar app</h2>
     <p class="note">Instala Original Sin-on con su ícono; abre y funciona sin internet.</p>
@@ -537,7 +542,11 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>sync());
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+const APP_VERSION='v3 · 26 nov';$('appVer').textContent=APP_VERSION;
+if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
+    $('updBtn').onclick=async()=>{$('updBtn').textContent='Buscando…';await reg.update().catch(()=>{});setTimeout(()=>{$('updBtn').textContent='Buscar actualización'},1500)}}).catch(()=>{})}
 Promise.all(SETS.map(k=>load(k)));
 sync();
 }

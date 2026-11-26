@@ -1,8 +1,9 @@
 // Original Sin-on — service worker: works offline after the first visit.
-const VERSION = 'sin-on-v2';
+const VERSION = 'sin-on-v3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest',   "assets/fonts/cormorant-garamond-latin-400-italic.woff2",  "assets/fonts/cormorant-garamond-latin-400-normal.woff2",  "assets/fonts/cormorant-garamond-latin-500-italic.woff2",  "assets/fonts/cormorant-garamond-latin-500-normal.woff2",  "assets/fonts/cormorant-garamond-latin-600-normal.woff2",  "assets/fonts/inter-latin-400-normal.woff2",  "assets/fonts/inter-latin-500-normal.woff2",  "assets/fonts/inter-latin-600-normal.woff2",  "assets/grip-d.png",  "assets/grip-u.png",  "assets/icon-180.png",  "assets/icon-192.png",  "assets/icon-32.png",  "assets/icon-512.png",  "assets/icon-maskable-512.png",  "assets/logo.png",  "data/obl.json",  "data/pbl.json"];
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' skips the browser's HTTP cache so a new version never precaches old files.
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, {cache: 'reload'})))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -15,7 +16,7 @@ self.addEventListener('fetch', e => {
     // Stale-while-revalidate: open instantly from cache, refresh in the background.
     e.respondWith(caches.open(VERSION).then(async c => {
       const cached = await c.match(req, {ignoreSearch: true}) || await c.match('index.html');
-      const net = fetch(req).then(r => { if (r.ok) c.put(req, r.clone()); return r; }).catch(() => cached);
+      const net = fetch(req, {cache: 'no-store'}).then(r => { if (r.ok) c.put(req, r.clone()); return r; }).catch(() => cached);
       return cached || net;
     }));
   } else {
