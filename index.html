@@ -65,6 +65,7 @@ section{display:none}section.on{display:block}
 #pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
 #pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
 #last{display:none}
+.fbSeg button{padding:0 8px;font-size:13px}.fbSeg button[data-fb=exe].on{background:var(--bad);color:#fff}.fbSeg button[data-fb=rec].on,.fbSeg button[data-fb=flu].on{background:var(--blush);color:#1a0f0e}
 #selector.fclean .modeRow,#selector.fclean .gbody>.row,#selector.fclean #selInfo{display:none}
 body:has(#drill.on) header{padding-top:10px}
 body:has(#drill.on) header .logo,body:has(#drill.on) header .vine,body:has(#drill.on) header .sub{display:none}
@@ -72,7 +73,7 @@ body:has(#drill.on) h1{font-size:24px}
 body:has(#drill.on) nav{padding-top:8px;padding-bottom:10px}
 .algPeek{display:block;margin-top:6px;padding:6px 0;min-height:32px;border:0;background:none;color:var(--mute);font:italic 500 17px 'Cormorant Garamond',serif;text-align:left;cursor:pointer;overflow-wrap:anywhere}
 .algPeek.on{color:var(--ink);font:500 15px Inter,sans-serif;font-style:normal}
-.promo{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:0 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line);font-size:14px}
+.promo[hidden]{display:none}.promo{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:0 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line);font-size:14px}
 .scrCard{margin-top:0;padding:12px 14px}.scrCard .scrRow{grid-template-columns:auto auto minmax(0,1fr);gap:12px}
 .curImg{height:76px;width:auto;display:block}.curName{font:italic 500 21px/1.1 'Cormorant Garamond',serif;margin-bottom:4px;overflow-wrap:anywhere}
 .scrCard .scr{font-size:clamp(17px,4.4vw,24px)}
@@ -193,6 +194,8 @@ a{color:inherit}
     <div class="hint" id="hint">Mantén presionado y suelta para iniciar</div>
   </div>
   <div class="card" id="last">
+    <div class="lbl" style="margin-bottom:6px">¿Cómo salió?</div>
+    <div class="seg fbSeg" role="group" aria-label="Cómo salió" style="margin-bottom:12px"><button data-fb="ok" class="on">Bien</button><button data-fb="rec">Reconocer</button><button data-fb="flu">Fluidez</button><button data-fb="exe">Error</button></div>
     <div class="promo" id="promo" hidden><span id="promoTxt"></span><button class="btn pri" id="promoBtn">Marcar como dominado</button></div>
     <div class="lastgrid">
       <img id="lastImg" alt="">
@@ -200,7 +203,7 @@ a{color:inherit}
       <div class="t" style="font-size:34px;font-weight:500" id="lastTime"></div>
     </div>
     <div class="row" style="margin-top:10px">
-      <button class="btn bad" id="failBtn">Marcar como fallo</button>
+      
       <button class="btn" id="delBtn">Borrar tiempo</button>
       <button class="btn" id="detBtn">Detalles</button>
       <button class="btn" id="skipBtn">Saltar caso</button>
@@ -434,9 +437,9 @@ function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast(
 function up(){if(justStopped){justStopped=false;return}clearTimeout(holdT);
   if(state==='ready'){state='run';pad.className='';t0=performance.now();$('hint').textContent='Toca para detener';tick()}else if(state==='hold'){state='idle';pad.className=''}}
 function stop(){cancelAnimationFrame(raf);const ms=Math.round(performance.now()-t0);state='idle';pad.className='';tEl.textContent=(ms/1000).toFixed(2);$('hint').textContent='Mantén presionado y suelta para iniciar';
-  const u=ud(cur.id),rec={ms,ok:true,d:Date.now(),x2:curX2,pk:peeked||!!S.alwaysAlg};u.r.push(rec);if(u.r.length>60)u.r.shift();const prev={lv:u.lv,due:u.due};grade(u,true,rec.pk);lastRec={c:cur,u,rec,prev};showPromo();
+  const u=ud(cur.id),rec={ms,ok:true,d:Date.now(),x2:curX2,pk:peeked||!!S.alwaysAlg};u.r.push(rec);if(u.r.length>60)u.r.shift();const prev={lv:u.lv,due:u.due};grade(u,'ok',rec.pk);lastRec={c:cur,u,rec,prev};showPromo();
   const seen=curX2?pair(cur):cur;
-  $('last').style.display='block';$('lastImg').src=img(seen);$('lastName').textContent=curX2?`${cur.n} con x2 (se ve como ${seen.n})`:cur.n;$('lastAlg').textContent=curX2?`x2 + ${myAlg(cur)}  ·  o directo: ${myAlg(seen)}`:myAlg(cur);$('lastTime').textContent=(ms/1000).toFixed(2);$('failBtn').textContent='Marcar como fallo';
+  $('last').style.display='block';$('lastImg').src=img(seen);$('lastName').textContent=curX2?`${cur.n} con x2 (se ve como ${seen.n})`:cur.n;$('lastAlg').textContent=curX2?`x2 + ${myAlg(cur)}  ·  o directo: ${myAlg(seen)}`:myAlg(cur);$('lastTime').textContent=(ms/1000).toFixed(2);document.querySelectorAll('[data-fb]').forEach(x=>x.classList.toggle('on',x.dataset.fb==='ok'));
   lastId=cur.id;save();pick();showCase();renderStats()}
 pad.addEventListener('pointerdown',e=>{e.preventDefault();down()});
 pad.addEventListener('pointerup',e=>{e.preventDefault();up()});
@@ -444,7 +447,8 @@ pad.addEventListener('pointercancel',()=>{clearTimeout(holdT);if(state!=='run'){
 const inDrill=e=>$('drill').classList.contains('on')&&!det&&!fed&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
 document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&inDrill(e)){e.preventDefault();down()}});
 document.addEventListener('keyup',e=>{if(e.code==='Space'&&inDrill(e)){e.preventDefault();up()}});
-$('failBtn').onclick=()=>{if(!lastRec)return;lastRec.rec.ok=!lastRec.rec.ok;const L=lastRec;L.u.lv=L.prev.lv;L.u.due=L.prev.due;if(L.u.lv==null){delete L.u.lv;delete L.u.due}grade(L.u,L.rec.ok,L.rec.pk);showPromo();renderLearn();$('failBtn').textContent=lastRec.rec.ok?'Marcar como fallo':'Marcado como fallo ✕';save();renderStats()};
+document.querySelectorAll('[data-fb]').forEach(b=>b.onclick=()=>{if(!lastRec)return;const L=lastRec,f=b.dataset.fb;L.rec.f=f;L.rec.ok=f!=='exe';L.u.lv=L.prev.lv;L.u.due=L.prev.due;if(L.u.lv==null){delete L.u.lv;delete L.u.due}grade(L.u,f,L.rec.pk);
+  document.querySelectorAll('[data-fb]').forEach(x=>x.classList.toggle('on',x===b));showPromo();renderLearn();save();renderStats()});
 $('delBtn').onclick=()=>{if(!lastRec)return;const i=lastRec.u.r.indexOf(lastRec.rec);if(i>-1)lastRec.u.r.splice(i,1);lastRec=null;$('last').style.display='none';save();renderStats();toast('Tiempo borrado')};
 $('detBtn').onclick=()=>{if(lastRec)openDet(lastRec.c.id)};
 $('skipBtn').onclick=()=>{if(cur)lastId=cur.id;pick();showCase()};
@@ -508,13 +512,13 @@ const INTV=[0,1,2,4,8,16];
 function today(){const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)}
 function isToday(){return S.af[S.cur]==='__today'}
 function learnCfg(){S.learn=S.learn||{src:(S.folders.find(f=>f.id==='notion')||{}).id||'',n:4,day:0,news:[]};return S.learn}
-function srcCases(L){const k=L.set||'OBL';const f=L.src?fById(L.src):null;return (D[k]||[]).filter(c=>f?inF(f,c):peek(c.id).sel)}
+function srcCases(L){const k=L.set||'OBL';const f=L.src?fById(L.src):null;if(f&&(f.ids||[]).length){const m=new Map((D[k]||[]).map(c=>[c.id,c]));const a=f.ids.map(i=>m.get(i)).filter(c=>c&&inF(f,c));const rest=(D[k]||[]).filter(c=>inF(f,c)&&!a.includes(c));return a.concat(rest)}return (D[k]||[]).filter(c=>f?inF(f,c):peek(c.id).sel)}
 function dueList(k){const t=today();return (D[k]||[]).filter(c=>{const u=peek(c.id);return u.lv!=null&&u.due<=t&&u.st!=='dominado'})}
 function introduce(n){const L=learnCfg(),k=L.set||'OBL',t=today();if(!D[k])return 0;let added=0;
   for(const c of srcCases(L)){if(added>=n)break;const u=peek(c.id);if(u.lv!=null||u.st==='dominado')continue;const w=ud(c.id);w.lv=0;w.due=t;w.st='aprendiendo';L.news=[...(L.news||[]),c.id];added++}
   return added}
 function ensureToday(){const L=learnCfg();if(!L.started)return;const k=L.set||'OBL';if(!D[k])return;const t=today();if(L.day===t)return;L.day=t;L.news=[];introduce(L.n||4);save();renderLearn()}
-function grade(u,ok,peeked){const t=today();if(u.lv==null||u.due>t||peeked)return;if(ok){u.lv=Math.min((u.lv||0)+1,5);u.due=t+INTV[u.lv]}else{u.lv=0;u.due=t}}
+function grade(u,f,peeked){const t=today();if(u.lv==null||u.due>t||peeked)return;if(f==='ok'){u.lv=Math.min((u.lv||0)+1,5);u.due=t+INTV[u.lv]}else if(f==='exe'){u.lv=0;u.due=t}else{u.due=t}}
 function renderLearn(){const L=learnCfg(),k=L.set||'OBL',sel=$('learnSrc');if(!sel)return;
   const fs=S.folders.filter(f=>f.set===k);sel.innerHTML=`<option value="">Mi selección</option>`+fs.map(f=>`<option value="${esc(f.id)}">Carpeta: ${esc(f.name)}</option>`).join('');sel.value=fs.some(f=>f.id===L.src)?L.src:'';
   $('learnN').value=L.n||4;
@@ -527,7 +531,7 @@ $('learnN').onchange=e=>{learnCfg().n=Math.max(1,Math.min(12,+e.target.value||4)
 $('learnGo').onclick=async()=>{const L=learnCfg();L.set=L.set||'OBL';if(S.cur!==L.set)await switchSet(L.set);if(!L.started){L.started=true;L.day=0}ensureToday();S.af[S.cur]='__today';editF=null;save();renderPractice();pick();showCase();goTab('drill');window.scrollTo(0,0)};
 $('learnMore').onclick=async()=>{const L=learnCfg();L.set=L.set||'OBL';if(S.cur!==L.set)await switchSet(L.set);if(!L.started){L.started=true;L.day=today();L.news=[]}const n=introduce(2);save();renderLearn();if(isToday()){pick();showCase()}toast(n?`${n} caso${n>1?'s':''} nuevo${n>1?'s':''} agregado${n>1?'s':''}`:'Ya no quedan casos nuevos en tu fuente')};
 
-function showPromo(){const L=lastRec;const on=L&&L.rec.ok&&(L.u.lv||0)>=4&&L.u.st!=='dominado';$('promo').hidden=!on;if(on)$('promoTxt').textContent=`${L.c.n}: tres repasos limpios espaciados. ¿Ya lo dominas?`}
+function showPromo(){const L=lastRec;const on=L&&(L.rec.f||'ok')==='ok'&&(L.u.lv||0)>=4&&L.u.st!=='dominado';$('promo').hidden=!on;if(on)$('promoTxt').textContent=`${L.c.n}: tres repasos limpios espaciados. ¿Ya lo dominas?`}
 /* ---- algorithm peek ---- */
 function renderPeek(){const b=$('algPeek');if(!cur){b.hidden=true;return}b.hidden=false;const show=peeked||S.alwaysAlg;b.classList.toggle('on',show);b.textContent=show?(myAlg(cur)||'Sin algoritmo elegido'):'Ver algoritmo'}
 $('algPeek').onclick=e=>{e.stopPropagation();peeked=!peeked||S.alwaysAlg;renderPeek()};
@@ -603,7 +607,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v13 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v14 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
