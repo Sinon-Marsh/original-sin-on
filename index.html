@@ -55,8 +55,9 @@ section{display:none}section.on{display:block}
 .scr{font:500 clamp(19px,4.8vw,26px)/1.4 Inter,sans-serif;text-align:center;word-spacing:3px;margin:6px 0 2px;letter-spacing:-.01em}
 .lbl{font-size:13px;color:var(--mute)}
 .c{text-align:center}
-#pad{margin-top:12px;border-radius:4px;background:radial-gradient(circle at 50% 48%,var(--glow) 0,transparent 55%),var(--card);border:1px solid var(--line);min-height:42vh;display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;position:relative;overflow:hidden}
-#pad::before{content:"";position:absolute;inset:8px;border:1px solid var(--line);pointer-events:none}
+#pad{margin-top:10px;border-radius:4px;background:radial-gradient(circle at 50% 48%,var(--glow) 0,transparent 55%),var(--card);border:1px solid var(--line);min-height:max(48vh,calc(100svh - 400px));display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;position:relative;overflow:hidden}
+#pad::before{content:"";position:absolute;inset:10px;border:1px solid var(--line);opacity:.7;pointer-events:none}
+#pad::after{content:"";position:absolute;inset:6px;pointer-events:none;--c:var(--hair);background:linear-gradient(var(--c),var(--c)) top left/14px 1px,linear-gradient(var(--c),var(--c)) top left/1px 14px,linear-gradient(var(--c),var(--c)) top right/14px 1px,linear-gradient(var(--c),var(--c)) top right/1px 14px,linear-gradient(var(--c),var(--c)) bottom left/14px 1px,linear-gradient(var(--c),var(--c)) bottom left/1px 14px,linear-gradient(var(--c),var(--c)) bottom right/14px 1px,linear-gradient(var(--c),var(--c)) bottom right/1px 14px;background-repeat:no-repeat}
 #pad .corner{position:absolute;width:38px;height:38px;color:var(--hair);pointer-events:none}
 #pad .corner.tl{top:4px;left:4px}#pad .corner.tr{top:4px;right:4px;transform:scaleX(-1)}#pad .corner.bl{bottom:4px;left:4px;transform:scaleY(-1)}#pad .corner.br{bottom:4px;right:4px;transform:scale(-1)}
 #time{font:400 clamp(76px,23vw,150px)/1 'Cormorant Garamond',Georgia,serif;font-variant-numeric:lining-nums tabular-nums;position:relative;transition:color .2s,text-shadow .3s}
@@ -64,6 +65,9 @@ section{display:none}section.on{display:block}
 #pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
 #pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
 #last{display:none}
+.scrCard{margin-top:0;padding:12px 14px}.scrCard .scr{margin:0 0 2px;text-align:left}.scrCard .lbl.c{text-align:left}
+details.drillSet{margin-top:14px}details.drillSet summary{cursor:pointer;font:italic 500 20px 'Cormorant Garamond',serif;list-style:none}details.drillSet summary::-webkit-details-marker{display:none}
+details.drillSet summary::before{content:"✝ ";font-style:normal;font-size:13px;color:var(--mute)}details.drillSet[open] summary{margin-bottom:10px}
 .scrRow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
 .grip{width:76px;text-align:center}.grip img{display:block;width:76px;height:76px;border:1px solid var(--line);border-radius:4px}
 .grip.u img{box-shadow:0 0 18px -4px var(--halo)}
@@ -169,18 +173,12 @@ a{color:inherit}
 </section>
 
 <section id="drill">
-  <div class="row setChips"></div>
-  <div class="row" style="margin-top:8px"><label class="lbl" for="practice">Practicar</label><select id="practice" style="flex:1;width:auto"></select></div>
-  <div class="row" style="margin-top:8px"><label class="ck"><input type="checkbox" id="smart">Repaso inteligente</label><label class="ck"><input type="checkbox" id="skipDom">Excluir dominados</label></div>
-  <div class="row oblOnly" style="margin-top:8px"><span class="lbl">Neutralidad x2:</span><div class="seg" role="group" aria-label="Neutralidad x2"><button data-x2="off">Normal</button><button data-x2="mix">Mezclar</button><button data-x2="only">Solo x2</button></div></div>
-  <p class="note">y2 ya va incluido: cada scramble agrega giros aleatorios de 90° y 180° en ambas capas.</p>
-  <div class="card">
-    <div class="lbl c">Scramble</div><div class="c" id="flipNote" style="font-weight:600;color:var(--hold);display:none">Voltea el puzzle resuelto (x2, otro color arriba) y luego aplica:</div>
+  <div class="card scrCard">
+    <div class="c" id="flipNote" style="font-weight:600;color:var(--hold);display:none">Voltea el puzzle resuelto (x2, otro color arriba) y luego aplica:</div>
     <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><div><div class="scr" id="scr">—</div>
     <div class="lbl c" id="poolInfo"></div></div></div>
   </div>
   <div id="pad" role="button" tabindex="0" aria-label="Cronómetro: mantén presionado y suelta para iniciar, toca para detener">
-    <svg class="corner tl" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner tr" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner bl" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg><svg class="corner br" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M3 35V9c0-3 3-6 6-6h26"/><path d="M8 30c0-12 8-22 22-22"/><path d="M8 30c4-1 6-4 5-7-1-2-4-2-5 0"/><path d="M30 8c-1 4-4 6-7 5-2-1-2-4 0-5"/></svg>
     <div id="time">0.00</div>
     <div class="hint" id="hint">Mantén presionado y suelta para iniciar</div>
   </div>
@@ -197,6 +195,12 @@ a{color:inherit}
       <button class="btn" id="skipBtn">Saltar caso</button>
     </div>
   </div>
+  <details class="card drillSet">
+    <summary>Ajustes del drill</summary>
+  <div class="row setChips"></div>
+  <div class="row" style="margin-top:8px"><label class="lbl" for="practice">Practicar</label><select id="practice" style="flex:1;width:auto"></select></div>
+  <div class="row" style="margin-top:8px"><label class="ck"><input type="checkbox" id="smart">Repaso inteligente</label><label class="ck"><input type="checkbox" id="skipDom">Excluir dominados</label></div>
+  </details>
 </section>
 
 <section id="stats">
@@ -396,7 +400,7 @@ function pick(){const p=pool();if(!p.length){cur=null;return}const cand=p.length
   if(!S.smart){cur=rnd(cand)}else{const av=p.map(c=>avg(peek(c.id))).filter(x=>x!=null),mean=av.length?av.reduce((a,b)=>a+b,0)/av.length:0;
     const w=cand.map(c=>{const u=peek(c.id),sw={pendiente:2,aprendiendo:3,dominado:1}[u.st],a=avg(u);const slow=a==null||!mean?1.6:Math.min(3,Math.max(.5,a/mean));return sw*slow*(1+2*failRate(u))});
     let r=Math.random()*w.reduce((a,b)=>a+b,0);cur=cand[cand.length-1];for(let i=0;i<cand.length;i++){r-=w[i];if(r<=0){cur=cand[i];break}}}
-  const pp=S.cur==='OBL'?pair(cur):null;curX2=!!pp&&pp.id!==cur.id&&(S.x2==='only'||(S.x2==='mix'&&Math.random()<.5));
+  const pp=S.cur==='OBL'?pair(cur):null;curX2=!!pp&&pp.id!==cur.id&&false;
   curScr=scramble(curX2?pp:cur)}
 function showCase(){const p=pool();{const g=cur?(peek(own(cur).id).gr||''):'';$('grip').hidden=!cur;if(cur){$('grip').className='grip '+(g||'none');$('gripImg').src='assets/grip-'+(g||'none')+'.png';$('gripImg').alt=g==='u'?'Agarre u':g==='d'?'Agarre d':'Agarre sin marcar'}}const shown=cur?(curX2?pair(cur):cur):null;$('flipNote').style.display=shown&&shown.neg?'block':'none';$('scr').textContent=cur?curScr:'—';const F=activeF();$('poolInfo').textContent=cur?`${p.length} caso${p.length>1?'s':''} en rotación${F?` · carpeta «${F.name}»`:''}`:(F?`La carpeta «${F.name}» no tiene casos disponibles`:'Selecciona casos en la pestaña Selector')}
 const pad=$('pad'),tEl=$('time');let state='idle',t0=0,raf=0,holdT=0,justStopped=false,lastRec=null;
@@ -425,7 +429,7 @@ $('skipBtn').onclick=()=>{if(cur)lastId=cur.id;pick();showCase()};
 function renderStats(){const F=activeF();$('statScope').textContent=F?`Mostrando la carpeta «${F.name}». Cámbiala en Drill → Practicar.`:'';const all=F?fMembers(F):cases(),cnt=s=>all.filter(c=>peek(c.id).st===s).length;
   $('sum').innerHTML=ST.map(s=>`<div><b>${cnt(s)}</b>${STL[s]}</div>`).join('')+`<div><b>${all.filter(c=>peek(c.id).sel).length}</b>Seleccionados</div>`;
   const rows=all.filter(c=>peek(c.id).r.length).sort((a,b)=>(avg(peek(b.id))??-1)-(avg(peek(a.id))??-1));
-  $('statTable').innerHTML=rows.length?`<table class="stack"><thead><tr><th>Caso</th><th>Estado</th><th class="num">Promedio</th><th class="num">Prom. x2</th><th class="num">Mejor</th><th class="num">Intentos</th><th class="num">Fallos</th></tr></thead><tbody>${rows.map(c=>{const u=peek(c.id);return `<tr><td><img alt="" src="${img(c)}">${esc(c.n)}</td><td>${STL[u.st]}</td><td class="num">${f2(avg(u))}</td><td class="num">${f2(avgX2(u))}</td><td class="num">${f2(best(u))}</td><td class="num">${u.r.length}</td><td class="num">${Math.round(failRate(u)*100)}%</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">Aún no hay tiempos en este set.</div>'}
+  $('statTable').innerHTML=rows.length?`<table class="stack"><thead><tr><th>Caso</th><th>Estado</th><th class="num">Promedio</th><th class="num">Mejor</th><th class="num">Intentos</th><th class="num">Fallos</th></tr></thead><tbody>${rows.map(c=>{const u=peek(c.id);return `<tr><td><img alt="" src="${img(c)}">${esc(c.n)}</td><td>${STL[u.st]}</td><td class="num">${f2(avg(u))}</td><td class="num">${f2(best(u))}</td><td class="num">${u.r.length}</td><td class="num">${Math.round(failRate(u)*100)}%</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">Aún no hay tiempos en este set.</div>'}
 
 /* ---- events ---- */
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.closest('#sheet'))return;
@@ -541,7 +545,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>sync());
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v4 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v5 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
