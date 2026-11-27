@@ -66,6 +66,39 @@ section{display:none}section.on{display:block}
 #pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
 #pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
 #last{display:none}
+/* ---- Drill: one fixed screen ---- */
+#drill{position:relative}.gearBtn{position:absolute;top:6px;right:6px;z-index:4;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+#drill.on .scrCard{padding-right:52px!important}
+body:has(#drill.on) header{display:none}
+body:has(#drill.on) nav{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px max(3vw,10px)}
+body:has(#drill.on) nav button{min-height:40px;padding:8px 14px;font-size:14px}
+body:has(#drill.on) main{padding-bottom:0}
+#drill.on{display:flex;flex-direction:column;gap:8px;height:calc(100dvh - var(--navH,58px) - 8px)}
+#drill.on .scrCard{flex:none;padding:10px 12px}
+#drill.on .scrCard .scr{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#drill.on #pad{flex:1;min-height:0;margin:0}
+#drill.on #recog:not([hidden]){flex:1;min-height:0;margin:0;display:flex;flex-direction:column;overflow:auto}
+#drill.on .rWrap{flex:1;min-height:0}
+.ganChip{display:inline-block;font:600 11px Inter,sans-serif;border:1px solid var(--ok);color:var(--ok);border-radius:999px;padding:1px 8px;margin-bottom:4px}
+/* result overlay inside the timer */
+#pad #last{position:absolute;left:10px;right:10px;bottom:10px;margin:0;z-index:3;padding:12px;background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(4px);cursor:default}
+#pad #last .lastgrid{grid-template-columns:auto minmax(0,1fr);gap:10px}#pad #last .lastgrid img{height:60px}#pad #last #lastTime{display:none}
+#pad #last .big{font-size:18px}#pad #last .row .btn{min-height:38px;padding:6px 12px;font-size:13px}
+#pad:has(#last[style*="block"]) #time{transform:translateY(-22%)}
+#pad:has(#last[style*="block"]) .hint{display:none}
+/* settings as a bottom sheet */
+#drill details.drillSet{margin:0;flex:none}
+#drill details.drillSet>summary{display:none}
+#drill details.drillSet[open]{position:fixed;left:0;right:0;bottom:0;z-index:16;max-height:78vh;overflow:auto;border-radius:12px 12px 0 0;padding:18px max(4vw,16px) 26px;box-shadow:0 -10px 40px rgb(0 0 0/.5)}
+#drill details.drillSet:not([open]){display:none}
+#setBack{position:fixed;inset:0;z-index:15;background:rgb(0 0 0/.5)}
+@media (orientation:landscape) and (max-height:560px){
+  #drill.on{flex-direction:row}
+  #drill.on .scrCard{width:42%;overflow:auto}
+  #drill.on .scrCard .scr{display:block;-webkit-line-clamp:unset}
+  #drill.on #recog:not([hidden]){flex-direction:row}
+}
+
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:6px}.kpis div{border:1px solid var(--line);border-radius:3px;padding:10px 6px;text-align:center;font-size:12px;color:var(--mute)}
 .kpis b{display:block;font:500 30px/1.05 'Cormorant Garamond',serif;color:var(--ink)}
 @media(max-width:420px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -199,9 +232,10 @@ a{color:inherit}
 </section>
 
 <section id="drill">
+  <button class="gearBtn" id="gearBtn" aria-label="Ajustes del drill"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"/></svg></button>
   <div class="card scrCard">
     
-    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><img id="curImg" class="curImg" alt="" hidden><div><div class="curName" id="curName"></div><div class="scr" id="scr">—</div><button class="algPeek" id="algPeek" type="button">Ver algoritmo</button></div></div>
+    <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><img id="curImg" class="curImg" alt="" hidden><div><div class="curName" id="curName"></div><div class="ganChip" id="ganChip" hidden>GAN</div><div class="scr" id="scr">—</div><button class="algPeek" id="algPeek" type="button">Ver algoritmo</button></div></div>
   </div>
   <div class="card" id="recog" hidden>
     <div class="rWrap"><img id="rImg" class="rImg" alt="Caso a reconocer"></div>
@@ -230,8 +264,10 @@ a{color:inherit}
       <button class="btn" id="skipBtn">Saltar caso</button>
     </div>
   </div>
+  <div id="setBack" hidden></div>
   <details class="card drillSet">
     <summary>Ajustes del drill</summary>
+    <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 style="margin:0">Ajustes del drill</h2><button class="btn pri" id="setClose">Listo</button></div>
     <div class="lbl" style="margin-bottom:6px">Timer GAN Halo</div><div class="row" style="margin-bottom:12px"><button class="btn" id="ganBtn">Conectar timer GAN</button><span class="lbl" id="ganStatus">Sin conectar</span></div>
     <div class="lbl" style="margin-bottom:6px">Modo</div><div class="seg" style="margin-bottom:12px"><button data-dm="timer">Timer</button><button data-dm="rec">Reconocimiento</button></div>
     <p class="note" id="poolInfo" style="margin:0 0 10px"></p>
@@ -476,7 +512,7 @@ function showCase(){const p=pool();setTimeout(renderRecog);peeked=false;setTimeo
 const pad=$('pad'),tEl=$('time');let state='idle',t0=0,raf=0,holdT=0,justStopped=false,lastRec=null;
 function tick(){tEl.textContent=((performance.now()-t0)/1000).toFixed(2);raf=requestAnimationFrame(tick)}
 function down(){if(state==='run'){stop();justStopped=true;return}if(!cur){toast('No hay casos seleccionados');return}
-  state='hold';pad.className='hold';tEl.textContent='0.00';holdT=setTimeout(()=>{if(state==='hold'){state='ready';pad.className='ready'}},300)}
+  state='hold';pad.className='hold';tEl.textContent='0.00';hideLast();holdT=setTimeout(()=>{if(state==='hold'){state='ready';pad.className='ready'}},300)}
 function up(){if(justStopped){justStopped=false;return}clearTimeout(holdT);
   if(state==='ready'){state='run';pad.className='';t0=performance.now();$('hint').textContent='Toca para detener';tick()}else if(state==='hold'){state='idle';pad.className=''}}
 let inSrc='tap';
@@ -643,10 +679,10 @@ function renderProgress(){if(!$('progCard')||!$('coach').classList.contains('on'
 /* ---- GAN Halo smart timer (Web Bluetooth) ---- */
 let gan=null,ganSub=null;
 function loadGanLib(){return window.SinonGan?Promise.resolve(window.SinonGan):new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='assets/gan.js';sc.onload=()=>res(window.SinonGan);sc.onerror=rej;document.head.appendChild(sc)})}
-function ganUI(t){$('ganStatus').textContent=t;$('ganBtn').textContent=gan?'Desconectar':'Conectar timer GAN';$('hint').textContent=gan?'GAN conectado · pon las manos para iniciar':'Mantén presionado y suelta para iniciar'}
+function ganUI(t){$('ganStatus').textContent=t;$('ganChip').hidden=!gan;$('ganBtn').textContent=gan?'Desconectar':'Conectar timer GAN';$('hint').textContent=gan?'GAN conectado · pon las manos para iniciar':'Mantén presionado y suelta para iniciar'}
 function onGan(ev){const G=window.SinonGan.GanTimerState;
   switch(ev.state){
-    case G.HANDS_ON: if(state!=='run'){state='hold';pad.className='hold';tEl.textContent='0.00'}break;
+    case G.HANDS_ON: if(state!=='run'){hideLast();state='hold';pad.className='hold';tEl.textContent='0.00'}break;
     case G.GET_SET: if(state!=='run'){state='ready';pad.className='ready'}break;
     case G.HANDS_OFF: case G.IDLE: if(state!=='run'){state='idle';pad.className=''}break;
     case G.RUNNING: if(!cur){toast('No hay casos para practicar');break}state='run';pad.className='';t0=performance.now();$('hint').textContent='Corriendo en el timer GAN';cancelAnimationFrame(raf);tick();break;
@@ -658,6 +694,18 @@ $('ganBtn').onclick=async()=>{if(gan){try{gan.disconnect()}catch(e){}gan=null;if
   catch(e){gan=null;ganUI(e&&e.name==='NotFoundError'?'No se eligió ningún timer':'No se pudo conectar: '+((e&&e.message)||'error'))}};
 document.querySelectorAll('[data-srcf]').forEach(b=>b.onclick=()=>{S.srcF=b.dataset.srcf;save();document.querySelectorAll('[data-srcf]').forEach(x=>x.classList.toggle('on',x===b));renderStats();renderProgress()});
 document.querySelectorAll('[data-srcf]').forEach(x=>x.classList.toggle('on',x.dataset.srcf===(S.srcF||'all')));
+
+
+/* ---- Drill single-screen helpers ---- */
+$('pad').appendChild($('last'));
+['pointerdown','pointerup','pointercancel','click'].forEach(ev=>$('last').addEventListener(ev,e=>e.stopPropagation()));
+const setNavH=()=>document.documentElement.style.setProperty('--navH',document.querySelector('nav').offsetHeight+'px');
+new ResizeObserver(setNavH).observe(document.querySelector('nav'));setNavH();
+const dSet=document.querySelector('details.drillSet');
+const openSet=o=>{dSet.open=o;$('setBack').hidden=!o};
+$('gearBtn').onclick=()=>openSet(!dSet.open);$('setClose').onclick=()=>openSet(false);$('setBack').onclick=()=>openSet(false);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&dSet.open)openSet(false)});
+const hideLast=()=>{$('last').style.display='none'};
 
 /* ---- recognition mode ---- */
 let rT0=0;
@@ -746,7 +794,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v20 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v21 · 27 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
