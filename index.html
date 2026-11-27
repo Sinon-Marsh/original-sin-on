@@ -70,6 +70,18 @@ section{display:none}section.on{display:block}
 *{-webkit-tap-highlight-color:transparent}#pad:focus,#pad:focus-visible{outline:none;box-shadow:none}
 .nIc{display:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .gearNav{display:none}
+/* ---- carpetas: selector compacto ---- */
+.fPick{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer;text-align:left}
+.fPick svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.fpN{flex:1;font:italic 500 19px/1.1 'Cormorant Garamond',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fpC{font-size:13px;color:var(--mute)}.fpV{color:var(--mute)}
+#fbar{background:none;border:0;padding:0;margin-top:8px}.fbBtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px}.fbBtns .btn{min-height:38px;padding:4px 6px;font-size:13.5px;white-space:nowrap}
+.fGrp{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:16px 0 2px}
+.fRow{display:flex;align-items:center;gap:12px;width:100%;padding:11px 4px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);cursor:pointer;text-align:left}
+.fRow .frN{flex:1;font:500 18px/1.15 'Cormorant Garamond',serif}.fRow small{display:block;font:12px Inter,sans-serif;color:var(--mute);margin-top:2px}
+.fRow .frC{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.fRow.on .frN{font-style:italic}.fRow.on .frN::before{content:"✝ ";font-style:normal;font-size:13px}
+
 /* ---- Stats compacto ---- */
 #stats .setChips{margin-bottom:8px}
 #stats .stSrc{display:flex;width:100%;margin:0 0 10px}#stats .stSrc button{flex:1;min-height:38px;padding:6px 4px}
@@ -264,8 +276,7 @@ a{color:inherit}
 <main>
 <section id="selector" class="on">
   <div class="row setChips"></div>
-  <div class="lbl" style="margin-top:14px">Carpetas</div>
-  <div class="row" id="fchips" style="margin-top:6px"></div>
+  <div id="fchips" style="margin-top:12px"></div>
   <div class="card" id="fbar" hidden></div>
   <div class="tools">
     <input type="search" id="q" placeholder="Buscar caso (p. ej. Kite, Opp)">
@@ -528,7 +539,19 @@ function renderPractice(){const sel=$('practice');if(!sel)return;const fs=S.fold
 $('practice').onchange=e=>{S.af[S.cur]=e.target.value||null;editF=activeF();save();renderSelector();pick();showCase();renderStats()};
 async function refreshFolders(){renderFolders();const need=[...new Set(S.folders.map(f=>f.set))].filter(k=>!D[k]);if(need.length){await Promise.all(need.map(load));renderFolders()}}
 function renderFolders(){const fc=$('fchips');if(!fc)return;const fs=S.folders.filter(f=>f.set===S.cur);
-  fc.innerHTML=`<button class="chip${editF?'':' on'}" data-fgo="">Mi selección</button>`+fs.map(f=>`<button class="chip${editF===f?' on':''}" data-fgo="${esc(f.id)}">${esc(f.name)} · ${D[f.set]?fMembers(f).length:'…'}</button>`).join('')+`<button class="chip" id="newF">+ Nueva carpeta</button>`}
+  const n=editF?(D[editF.set]?fMembers(editF).length:'…'):selIds(S.cur).length;
+  fc.innerHTML=`<button class="fPick" id="fPick" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg><span class="fpN">${esc(editF?editF.name:'Mi selección')}</span><span class="fpC">${n}</span><svg class="fpV" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>`}
+function openFolderList(){const fs=S.folders.filter(f=>f.set===S.cur),isW=f=>f.kind==='week'||/^Semana \d/.test(f.name),wk=fs.filter(isW),mine=fs.filter(f=>!isW(f));
+  const row=(id,name,n,sub)=>`<button type="button" class="fRow${(editF?editF.id:'')===id?' on':''}" data-fl="${esc(id)}"><span class="frN">${esc(name)}${sub?`<small>${sub}</small>`:''}</span><span class="frC">${n}</span></button>`;
+  const cnt=f=>D[f.set]?fMembers(f).length:'…';
+  $('sheetIn').innerHTML=`<h2 id="dName" style="font-size:28px;margin:0 0 6px">Carpetas</h2>${row('','Mi selección',selIds(S.cur).length,'Los casos marcados en el Selector')}
+  ${wk.length?`<div class="fGrp">Plan semanal</div>${wk.map(f=>row(f.id,f.name,cnt(f))).join('')}`:''}
+  <div class="fGrp">Mis carpetas</div>${mine.map(f=>row(f.id,f.name,cnt(f))).join('')||'<p class="note">Aún no tienes carpetas propias.</p>'}
+  <div class="row" style="margin-top:16px"><button class="btn" type="button" data-flnew>+ Nueva carpeta</button><button class="btn" type="button" data-flclose>Cerrar</button></div>`;
+  $('sheet').classList.add('on');$('sheetIn').scrollTop=0}
+$('sheetIn').addEventListener('click',e=>{const b=e.target.closest('[data-fl],[data-flnew],[data-flclose]');if(!b)return;e.stopPropagation();$('sheet').classList.remove('on');
+  if(b.dataset.fl!==undefined){enterFolder(b.dataset.fl?fById(b.dataset.fl):null);return}
+  if(b.dataset.flnew!==undefined)openFolder({id:'f'+Date.now().toString(36),name:'',set:S.cur,q:'',ids:[],ex:[],noNeg:false},true)});
 let folderEdit=false;
 function enterFolder(f){editF=f||null;folderEdit=false;S.af[S.cur]=f?f.id:null;save();mode='sel';document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x.dataset.mode==='sel'));renderSelector();renderPractice();pick();showCase();renderStats()}
 async function practiceF(id){const f=fById(id);if(!f)return;if(S.cur!==f.set){lastRec=null;$('last').style.display='none';await switchSet(f.set)}S.af[f.set]=f.id;save();renderPractice();pick();showCase();renderStats();goTab('drill')}
@@ -551,7 +574,7 @@ async function folderClick(e){if(e.target.id==='sheet'||e.target.closest('[data-
   if(b.hasAttribute('data-fpick')){const f=commitFolder();if(S.cur!==f.set)await switchSet(f.set);editF=f;mode='sel';document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x.dataset.mode==='sel'));goTab('selector');renderSelector();window.scrollTo(0,0);return}
   if(b.hasAttribute('data-fdel')){if(!fed.del){fed.del=true;b.textContent='¿Seguro? Toca otra vez';return}const o=fed.o;S.folders=S.folders.filter(f=>f!==o);S.fdel=[...new Set([...(S.fdel||[]),o.id])];SETS.forEach(k=>{if(S.af[k]===o.id)S.af[k]=null});if(editF===o)editF=null;save();closeFolder();renderSelector();renderPractice();pick();showCase();renderStats();toast('Carpeta eliminada')}}
 $('sheet').addEventListener('input',e=>{if(!fed)return;if(e.target.id==='fQ'){fed.d.q=e.target.value;fPrev()}});
-function renderFbar(){renderFolders();$('selector').classList.toggle('fclean',!!editF&&!folderEdit);const fb=$('fbar');fb.hidden=!editF;if(!editF)return;fb.innerHTML=`<div class="row" style="justify-content:space-between"><div style="flex:1;min-width:10em"><div class="big">${esc(editF.name)}</div><div class="lbl">${(n=>n+(n===1?' caso':' casos'))(fMembers(editF).length)}${folderEdit?' · toca casos para agregarlos o quitarlos':''}</div></div><div class="row"><button class="btn${folderEdit?' pri':''}" id="fToggle">${folderEdit?'Listo':'Agregar o quitar casos'}</button><button class="btn" id="fEdit">Ajustes</button>${folderEdit?'':'<button class="btn pri" id="fPlay">Practicar</button>'}</div></div>`}
+function renderFbar(){renderFolders();$('selector').classList.toggle('fclean',!!editF&&!folderEdit);const fb=$('fbar');fb.hidden=!editF;if(!editF)return;fb.innerHTML=`${folderEdit?'<p class="note" style="margin:0 0 8px">Toca casos para agregarlos o quitarlos.</p>':''}<div class="fbBtns"><button class="btn${folderEdit?' pri':''}" id="fToggle">${folderEdit?'Listo':'Editar casos'}</button><button class="btn" id="fEdit">Ajustes</button>${folderEdit?'':'<button class="btn pri" id="fPlay">Practicar</button>'}</div>`}
 
 /* ---- drill ---- */
 let cur=null,curScr='',lastId=null,curX2=false;
@@ -603,6 +626,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.id==='fToggle'&&editF){folderEdit=!folderEdit;renderSelector();return}
   if(b.id==='fEdit'&&editF){openFolder(editF,false);return}
   if(b.id==='fPlay'){goTab('drill');window.scrollTo(0,0);return}
+  if(b.id==='fPick'){openFolderList();return}
   if(b.id==='newF'){openFolder({id:'f'+Date.now().toString(36),name:'',set:S.cur,q:'',ids:[],ex:[],noNeg:false},true);return}
   if(b.dataset.set){if(b.dataset.set!==S.cur){lastRec=null;$('last').style.display='none';switchSet(b.dataset.set)}return}
   if(b.dataset.x2){S.x2=b.dataset.x2;save();document.querySelectorAll('[data-x2]').forEach(x=>x.classList.toggle('on',x===b));pick();showCase();return}
@@ -851,7 +875,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v25 · 27 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v26 · 27 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
