@@ -70,6 +70,18 @@ section{display:none}section.on{display:block}
 *{-webkit-tap-highlight-color:transparent}#pad:focus,#pad:focus-visible{outline:none;box-shadow:none}
 .nIc{display:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .gearNav{display:none}
+.railBtn{display:none}
+body:has(#drill.on) .railBtn{display:flex;align-items:center;justify-content:center;width:44px;height:40px;margin-bottom:6px;border:0!important;background:none!important;box-shadow:none!important;color:var(--ink);padding:0!important;min-height:0}
+body:has(#drill.on) nav,body:has(#drill.on) main{transition:left .28s ease,margin-left .28s ease}
+.rbArr{transition:transform .28s ease;transform-origin:14px 12px}
+body.railShut:has(#drill.on) nav{left:-67px;overflow:visible}
+body.railShut:has(#drill.on) main{margin-left:0}
+body.railShut:has(#drill.on) .railBtn{position:fixed;left:8px;top:8px;background:var(--bg)!important;border:1px solid var(--line)!important;border-radius:10px;width:38px;height:38px;z-index:7}
+body.railShut .rbArr{transform:scaleX(-1)}
+body.railShut:has(#drill.on) #drill .scrCard{padding-left:46px!important;padding-right:46px!important}
+body.railShut:has(#drill.on) .gearNav{position:fixed;right:8px;top:8px;left:auto;width:38px;height:38px;min-height:0;padding:0!important;align-items:center;justify-content:center;background:var(--bg);border-radius:10px;z-index:7;margin:0}
+body.railShut:has(#drill.on) #drill.on{padding-left:0}
+
 /* ---- Drill: side rail ---- */
 body:has(#drill.on) nav{position:fixed;left:0;top:0;bottom:0;width:66px;margin:0;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding:12px 6px;overflow-y:auto;border-right:1px solid var(--line);background:var(--bg);z-index:6}
 body:has(#drill.on) nav button{width:54px;min-height:54px;padding:6px 0!important;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px!important;border-color:transparent}
@@ -221,6 +233,8 @@ a{color:inherit}
   <svg class="vine" data-vine viewBox="0 0 600 44" aria-hidden="true"></svg>
 </header>
 <nav role="tablist">
+  <button class="railBtn" id="railBtn" aria-label="Mostrar u ocultar la barra" aria-expanded="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/><path class="rbArr" d="M15.5 9.5l-2.5 2.5 2.5 2.5"/></svg></button>
+
   <button data-tab="selector" aria-selected="true"><svg class="nIc" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></svg><span>Selector</span></button>
   <button data-tab="drill"><svg class="nIc" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M9.5 2.5h5M12 2.5v3.5"/></svg><span>Drill</span></button>
   <button data-tab="stats"><svg class="nIc" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-7M22 20H2"/></svg><span>Stats</span></button>
@@ -717,6 +731,9 @@ document.querySelectorAll('[data-srcf]').forEach(x=>x.classList.toggle('on',x.da
 
 /* ---- Drill single-screen helpers ---- */
 $('pad').appendChild($('last'));
+{const shut=localStorage.getItem('sinRail')==='0';document.body.classList.toggle('railShut',shut);$('railBtn').setAttribute('aria-expanded',!shut);
+$('railBtn').addEventListener('click',e=>{e.stopPropagation();const c=document.body.classList.toggle('railShut');$('railBtn').setAttribute('aria-expanded',!c);try{localStorage.setItem('sinRail',c?'0':'1')}catch(_){}})}
+
 ['pointerdown','pointerup','pointercancel','click'].forEach(ev=>$('last').addEventListener(ev,e=>e.stopPropagation()));
 const setNavH=()=>document.documentElement.style.setProperty('--navH',document.querySelector('nav').offsetHeight+'px');
 new ResizeObserver(setNavH).observe(document.querySelector('nav'));setNavH();
@@ -813,7 +830,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v22 · 27 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v23 · 27 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
