@@ -459,7 +459,7 @@ async function folderClick(e){if(e.target.id==='sheet'||e.target.closest('[data-
   if(b.dataset.fset){if(fed.d.set!==b.dataset.fset){fed.d.set=b.dataset.fset;fed.d.ids=fed.isNew?selIds(fed.d.set):[];fed.d.ex=[]}$('sheetIn').querySelectorAll('[data-fset]').forEach(x=>x.classList.toggle('on',x===b));fPrev();return}
   if(b.hasAttribute('data-fsave')){const f=commitFolder();toast('Carpeta guardada');if(S.cur!==f.set)await switchSet(f.set);enterFolder(f);return}
   if(b.hasAttribute('data-fpick')){const f=commitFolder();if(S.cur!==f.set)await switchSet(f.set);editF=f;mode='sel';document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x.dataset.mode==='sel'));goTab('selector');renderSelector();window.scrollTo(0,0);return}
-  if(b.hasAttribute('data-fdel')){if(!fed.del){fed.del=true;b.textContent='¿Seguro? Toca otra vez';return}const o=fed.o;S.folders=S.folders.filter(f=>f!==o);SETS.forEach(k=>{if(S.af[k]===o.id)S.af[k]=null});if(editF===o)editF=null;save();closeFolder();renderSelector();renderPractice();pick();showCase();renderStats();toast('Carpeta eliminada')}}
+  if(b.hasAttribute('data-fdel')){if(!fed.del){fed.del=true;b.textContent='¿Seguro? Toca otra vez';return}const o=fed.o;S.folders=S.folders.filter(f=>f!==o);S.fdel=[...new Set([...(S.fdel||[]),o.id])];SETS.forEach(k=>{if(S.af[k]===o.id)S.af[k]=null});if(editF===o)editF=null;save();closeFolder();renderSelector();renderPractice();pick();showCase();renderStats();toast('Carpeta eliminada')}}
 $('sheet').addEventListener('input',e=>{if(!fed)return;if(e.target.id==='fQ'){fed.d.q=e.target.value;fPrev()}});
 function renderFbar(){renderFolders();$('selector').classList.toggle('fclean',!!editF&&!folderEdit);const fb=$('fbar');fb.hidden=!editF;if(!editF)return;fb.innerHTML=`<div class="row" style="justify-content:space-between"><div style="flex:1;min-width:10em"><div class="big">${esc(editF.name)}</div><div class="lbl">${(n=>n+(n===1?' caso':' casos'))(fMembers(editF).length)}${folderEdit?' · toca casos para agregarlos o quitarlos':''}</div></div><div class="row"><button class="btn${folderEdit?' pri':''}" id="fToggle">${folderEdit?'Listo':'Agregar o quitar casos'}</button><button class="btn" id="fEdit">Ajustes</button>${folderEdit?'':'<button class="btn pri" id="fPlay">Practicar</button>'}</div></div>`}
 
@@ -675,9 +675,9 @@ applyMode();
 const GHK='sq1trainer.gh',PLANK='sq1trainer.plan';
 const saveGh=()=>{try{localStorage.setItem(GHK,JSON.stringify(gh))}catch(e){}};
 function strip(u){return {sel:!!u.sel,st:u.st||'pendiente',ai:u.ai??null,ca:u.ca||'',gr:u.gr||'',no:u.no||'',...(u.lv!=null?{lv:u.lv,due:u.due}:{}),r:(u.r||[]).slice(-60)}}
-function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af,learn:S.learn||null,alwaysAlg:!!S.alwaysAlg,dmode:S.dmode||'timer',tdone:S.tdone||null,srcF:S.srcF||'all'})}
+function metaOf(){return JSON.stringify({cur:S.cur,smart:!!S.smart,skipDom:!!S.skipDom,x2:S.x2||'off',showNeg:S.showNeg!==false,pairSel:!!S.pairSel,folders:S.folders,af:S.af,learn:S.learn||null,alwaysAlg:!!S.alwaysAlg,dmode:S.dmode||'timer',tdone:S.tdone||null,srcF:S.srcF||'all',fdel:S.fdel||[]})}
 function ckey(k,id){return k+'_'+id}
-function stampLocal(){const now=Date.now();for(const k of SETS)for(const [id,u] of Object.entries(S.u[k]||{})){const b=JSON.stringify(strip(u)),key=ckey(k,id);if(localCache[key]!==b){if(localCache[key]!==undefined||!u.t)u.t=now;localCache[key]=b}}
+function stampLocal(){const now=Date.now();for(const f of S.folders||[]){const {t,...rest}=f,b=JSON.stringify(rest),key='F:'+f.id;if(localCache[key]!==b){if(localCache[key]!==undefined||!f.t)f.t=now;localCache[key]=b}}for(const k of SETS)for(const [id,u] of Object.entries(S.u[k]||{})){const b=JSON.stringify(strip(u)),key=ckey(k,id);if(localCache[key]!==b){if(localCache[key]!==undefined||!u.t)u.t=now;localCache[key]=b}}
   const m=metaOf();if(metaL!==m){if(metaL!==null||!S.mt)S.mt=now;metaL=m}}
 stampLocal();
 function syncMsg(t){$('syncState').textContent=t;$('coachNote').textContent=t}
@@ -693,8 +693,14 @@ async function putFile(path,obj,sha,msg){const r=await api(path,{method:'PUT',he
   if(r.status===409||r.status===422)throw Object.assign(new Error('conflict'),{conflict:true});if(!r.ok)throw new Error('HTTP '+r.status);return (await r.json()).content.sha}
 function buildRemote(){const u={};for(const k of SETS){u[k]={};for(const [id,x] of Object.entries(S.u[k]||{})){const nm=nameOf(k,id)||x.nm||'';if(nm)x.nm=nm;u[k][id]={...strip(x),t:x.t||0,name:nm}}}
   return {v:1,meta:{...JSON.parse(metaOf()),mt:S.mt||0},u}}
-function mergeRemote(R){let changed=false;const m=R.meta;
+function mergeFolders(m){if(!m)return false;let ch=false;const del=new Set([...(S.fdel||[]),...(m.fdel||[])]);S.fdel=[...del];
+  const before=S.folders.length;S.folders=S.folders.filter(f=>!del.has(f.id));if(S.folders.length!==before)ch=true;
+  for(const rf of m.folders||[]){if(del.has(rf.id))continue;const i=S.folders.findIndex(f=>f.id===rf.id);
+    if(i<0){S.folders.push(JSON.parse(JSON.stringify(rf)));ch=true}else if((rf.t||0)>(S.folders[i].t||0)){S.folders[i]=JSON.parse(JSON.stringify(rf));ch=true}}
+  if(ch){for(const f of S.folders){const {t,...rest}=f;localCache['F:'+f.id]=JSON.stringify(rest)}}return ch}
+function mergeRemote(R){let changed=false;const m=R.meta;const lf=JSON.stringify(S.folders);
   if(m&&(m.mt||0)>(S.mt||0)){Object.assign(S,{cur:SETS.includes(m.cur)?m.cur:S.cur,smart:!!m.smart,skipDom:!!m.skipDom,x2:m.x2||'off',showNeg:m.showNeg!==false,pairSel:!!m.pairSel,folders:m.folders||[],af:m.af||{},learn:m.learn||S.learn,alwaysAlg:!!m.alwaysAlg,tdone:m.tdone||S.tdone||null,dmode:m.dmode||S.dmode||'timer',mt:m.mt});changed=true}
+  {const keep=JSON.parse(lf);if(JSON.stringify(S.folders)!==lf){const remoteF=S.folders;S.folders=keep;mergeFolders({folders:remoteF,fdel:m&&m.fdel})}if(mergeFolders(m))changed=true}
   for(const k of SETS)for(const [id,r] of Object.entries((R.u||{})[k]||{})){const loc=S.u[k][id];
     const seen=new Set(),recs=[...(loc&&loc.r||[]),...(r.r||[])].filter(x=>{const q=x.d+'_'+x.ms;if(seen.has(q))return false;seen.add(q);return true}).sort((a,b)=>a.d-b.d).slice(-60);
     if(!loc||(r.t||0)>(loc.t||0)){S.u[k][id]={sel:!!r.sel,st:r.st||'pendiente',ai:r.ai??null,ca:r.ca||'',gr:r.gr||'',no:r.no||'',...(r.lv!=null?{lv:r.lv,due:r.due}:{}),r:recs,t:r.t,nm:r.name||''};changed=true}
@@ -740,7 +746,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v19 · 26 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v20 · 26 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
