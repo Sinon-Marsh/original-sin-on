@@ -70,6 +70,24 @@ section{display:none}section.on{display:block}
 *{-webkit-tap-highlight-color:transparent}#pad:focus,#pad:focus-visible{outline:none;box-shadow:none}
 .nIc{display:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .gearNav{display:none}
+/* ---- Stats compacto ---- */
+#stats .setChips{margin-bottom:8px}
+#stats .stSrc{display:flex;width:100%;margin:0 0 10px}#stats .stSrc button{flex:1;min-height:38px;padding:6px 4px}
+#stats .sum{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:14px}
+#stats .sum div{border:0;border-radius:0;padding:10px 2px 8px;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stats .sum div+div{border-left:1px solid var(--line)}
+#stats .sum b{font-size:28px}
+.stHead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 4px}.stHead h2{font-size:22px;margin:0;font-weight:500;font-style:italic}.stHead span{font-size:12px;color:var(--mute)}
+#statScope:empty{display:none}
+.sList{list-style:none;margin:0;padding:0}
+.sList li{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.sList img{width:40px;height:40px;object-fit:contain}
+.sN{min-width:0}.sN b{display:block;font:500 17px/1.15 'Cormorant Garamond',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sN small,.sT small{display:block;font-size:11.5px;color:var(--mute);margin-top:1px}.sN em{font-style:normal;color:var(--bad,#9b3b32)}
+.sT{text-align:right}.sT b{display:block;font:500 22px/1 'Cormorant Garamond',serif;font-variant-numeric:lining-nums tabular-nums!important}
+#stats .empty{padding:18px 0;text-align:center}
+body:has(#stats.on) header .logo,body:has(#stats.on) header .sub,body:has(#stats.on) header .vine{display:none}body:has(#stats.on) header{padding:14px 14px 10px}body:has(#stats.on) h1{font-size:26px}
+
 .railBtn{display:none}
 body .railBtn{display:flex;align-items:center;justify-content:center;width:44px;height:40px;margin-bottom:6px;border:0!important;background:none!important;box-shadow:none!important;color:var(--ink);padding:0!important;min-height:0}
 body nav{transition:left .28s ease}
@@ -313,9 +331,11 @@ a{color:inherit}
 
 <section id="stats">
   <div class="row setChips"></div>
-  <div class="row" style="margin-top:10px"><span class="lbl">Tiempos de:</span><div class="seg" role="group" aria-label="Fuente de tiempos"><button data-srcf="all">Todos</button><button data-srcf="gan">Timer GAN</button><button data-srcf="man">Teléfono / teclado</button></div></div>
-  <div class="card"><div class="sum" id="sum"></div></div>
-  <div class="card"><p class="note" id="statScope"></p><p class="note">Casos con tiempos, del más lento al más rápido. Promedio de los últimos 12 intentos válidos.</p><div id="statTable"></div></div>
+  <div class="seg stSrc" role="group" aria-label="Fuente de tiempos"><button data-srcf="all">Todos</button><button data-srcf="gan">GAN</button><button data-srcf="man">Teléfono</button></div>
+  <div class="sum" id="sum"></div>
+  <div class="stHead"><h2>Por caso</h2><span>del más lento al más rápido · prom. de 12</span></div>
+  <p class="note" id="statScope"></p>
+  <div id="statTable"></div>
 </section>
 
 <section id="coach">
@@ -570,9 +590,9 @@ $('skipBtn').onclick=()=>{if(cur)lastId=cur.id;pick();showCase()};
 
 /* ---- stats ---- */
 function renderStats(){const F=activeF();$('statScope').textContent=F?`Mostrando la carpeta «${F.name}». Cámbiala en Drill → Practicar.`:'';const all=F?fMembers(F):cases(),cnt=s=>all.filter(c=>peek(c.id).st===s).length;
-  $('sum').innerHTML=ST.map(s=>`<div><b>${cnt(s)}</b>${STL[s]}</div>`).join('')+`<div><b>${all.filter(c=>peek(c.id).sel).length}</b>Seleccionados</div>`;
+  $('sum').innerHTML=ST.map(s=>`<div><b>${cnt(s)}</b>${STL[s]}</div>`).join('')+`<div><b>${all.filter(c=>peek(c.id).sel).length}</b>Elegidos</div>`;
   const rows=all.filter(c=>peek(c.id).r.length).sort((a,b)=>(avg(peek(b.id))??-1)-(avg(peek(a.id))??-1));
-  $('statTable').innerHTML=rows.length?`<table class="stack"><thead><tr><th>Caso</th><th>Estado</th><th class="num">Promedio</th><th class="num">Mejor</th><th class="num">Intentos</th><th class="num">Fallos</th></tr></thead><tbody>${rows.map(c=>{const u=peek(c.id);return `<tr><td><img alt="" src="${img(c)}">${esc(c.n)}</td><td>${STL[u.st]}</td><td class="num">${f2(avg(u))}</td><td class="num">${f2(best(u))}</td><td class="num">${u.r.length}</td><td class="num">${Math.round(failRate(u)*100)}%</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">Aún no hay tiempos en este set.</div>'}
+  $('statTable').innerHTML=rows.length?`<ol class="sList">${rows.map(c=>{const u=peek(c.id),fr=Math.round(failRate(u)*100);return `<li><img alt="" src="${img(c)}"><div class="sN"><b>${esc(c.n)}</b><small>${STL[u.st]} · ${u.r.length} int.${fr?` · <em>${fr}% fallos</em>`:''}</small></div><div class="sT"><b>${f2(avg(u))}</b><small>mejor ${f2(best(u))}</small></div></li>`}).join('')}</ol>`:'<div class="empty">Aún no hay tiempos en este set.</div>'}
 
 /* ---- events ---- */
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.closest('#sheet'))return;
@@ -831,7 +851,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v24 · 27 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v25 · 27 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
