@@ -66,14 +66,33 @@ section{display:none}section.on{display:block}
 #pad.ready #time{color:var(--pearl);text-shadow:0 0 28px var(--halo),0 0 4px var(--halo)}
 #pad .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:italic 16px 'Cormorant Garamond',serif;color:var(--mute)}
 #last{display:none}
+/* ---- tap highlight off ---- */
+*{-webkit-tap-highlight-color:transparent}#pad:focus,#pad:focus-visible{outline:none;box-shadow:none}
+.nIc{display:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.gearNav{display:none}
+/* ---- Drill: side rail ---- */
+body:has(#drill.on) nav{position:fixed;left:0;top:0;bottom:0;width:66px;margin:0;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding:12px 6px;overflow-y:auto;border-right:1px solid var(--line);background:var(--bg);z-index:6}
+body:has(#drill.on) nav button{width:54px;min-height:54px;padding:6px 0!important;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px!important;border-color:transparent}
+body:has(#drill.on) nav .nIc{display:block}
+body:has(#drill.on) nav button[aria-selected=true]{box-shadow:0 0 14px -4px var(--halo)}
+body:has(#drill.on) .gearNav{display:flex;margin-top:auto;border:1px solid var(--line)!important}
+body:has(#drill.on) main{margin-left:66px;max-width:none;padding:10px 10px 0}
+#drill.on{height:calc(100dvh - 20px)}
+/* ---- scramble strip: no box, engraved rule ---- */
+#drill .scrCard{background:none;border:0;border-radius:0;padding:6px 4px 12px!important;position:relative}
+#drill .scrCard::after{content:"";position:absolute;left:8%;right:8%;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--hair),transparent)}
+#drill .scrCard::before{content:"";position:absolute;left:50%;bottom:-3px;width:7px;height:7px;transform:translateX(-50%) rotate(45deg);background:var(--bg);border:1px solid var(--hair)}
+#drill .scrCard .grip img{border:0;border-radius:3px}
+#drill .scrCard .curName{font-size:22px}
+#drill .scrCard .scr{font:400 clamp(17px,4.6vw,23px)/1.4 Inter,sans-serif;letter-spacing:.01em;word-spacing:.08em}
+#drill .scrCard .algPeek{padding:2px 0;min-height:28px;font:italic 15px Cormorant Garamond,serif;color:var(--mut,#7a7064);background:none;border:0;text-decoration:underline;text-decoration-color:var(--hair);text-underline-offset:3px}
+
 /* ---- Drill: one fixed screen ---- */
 #drill{position:relative}.gearBtn{position:absolute;top:6px;right:6px;z-index:4;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer}
-#drill.on .scrCard{padding-right:52px!important}
+
 body:has(#drill.on) header{display:none}
-body:has(#drill.on) nav{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px max(3vw,10px)}
-body:has(#drill.on) nav button{min-height:40px;padding:8px 14px;font-size:14px}
 body:has(#drill.on) main{padding-bottom:0}
-#drill.on{display:flex;flex-direction:column;gap:8px;height:calc(100dvh - var(--navH,58px) - 8px)}
+#drill.on{display:flex;flex-direction:column;gap:10px}
 #drill.on .scrCard{flex:none;padding:10px 12px}
 #drill.on .scrCard .scr{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 #drill.on #pad{flex:1;min-height:0;margin:0}
@@ -202,11 +221,12 @@ a{color:inherit}
   <svg class="vine" data-vine viewBox="0 0 600 44" aria-hidden="true"></svg>
 </header>
 <nav role="tablist">
-  <button data-tab="selector" aria-selected="true">Selector</button>
-  <button data-tab="drill">Drill</button>
-  <button data-tab="stats">Stats</button>
-  <button data-tab="coach">Coach</button>
-  <button data-tab="datos">Datos</button>
+  <button data-tab="selector" aria-selected="true"><svg class="nIc" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></svg><span>Selector</span></button>
+  <button data-tab="drill"><svg class="nIc" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M9.5 2.5h5M12 2.5v3.5"/></svg><span>Drill</span></button>
+  <button data-tab="stats"><svg class="nIc" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-7M22 20H2"/></svg><span>Stats</span></button>
+  <button data-tab="coach"><svg class="nIc" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M7 8h10"/><circle cx="12" cy="8" r="5.5" opacity=".5"/></svg><span>Coach</span></button>
+  <button data-tab="datos"><svg class="nIc" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg><span>Datos</span></button>
+  <button class="gearNav" id="gearBtn" aria-label="Ajustes del drill"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"/></svg></button>
 </nav>
 <main>
 <section id="selector" class="on">
@@ -232,8 +252,7 @@ a{color:inherit}
 </section>
 
 <section id="drill">
-  <button class="gearBtn" id="gearBtn" aria-label="Ajustes del drill"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"/></svg></button>
-  <div class="card scrCard">
+    <div class="card scrCard">
     
     <div class="scrRow"><div class="grip" id="grip" hidden><img id="gripImg" alt=""></div><img id="curImg" class="curImg" alt="" hidden><div><div class="curName" id="curName"></div><div class="ganChip" id="ganChip" hidden>GAN</div><div class="scr" id="scr">—</div><button class="algPeek" id="algPeek" type="button">Ver algoritmo</button></div></div>
   </div>
@@ -794,7 +813,7 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v21 · 27 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v22 · 27 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
