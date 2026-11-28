@@ -890,11 +890,19 @@ window.addEventListener('online',()=>sync());
 document.addEventListener('visibilitychange',()=>{sync();if(document.visibilityState==='visible'){const t=learnCfg().day;ensureToday();if(learnCfg().day!==t&&isToday()){pick();showCase()}}});
 let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installCard').hidden=false});
 $('installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('installCard').hidden=true};
-const APP_VERSION='v29 · 27 nov';$('appVer').textContent=APP_VERSION;
+const APP_VERSION='v30 · 27 nov';$('appVer').textContent=APP_VERSION;
 if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtl||reloaded)return;reloaded=true;location.reload()});
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>reg.update().catch(()=>{});chk();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
-    $('updBtn').onclick=async()=>{$('updBtn').textContent='Buscando…';await reg.update().catch(()=>{});setTimeout(()=>{$('updBtn').textContent='Buscar actualización'},1500)}}).catch(()=>{})}
+    $('updBtn').onclick=()=>checkUpdate(reg)}).catch(()=>{})}
+async function hardRefresh(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(_){}location.replace(location.pathname+'?u='+Date.now())}
+async function checkUpdate(reg){const b=$('updBtn'),say=t=>{b.textContent=t},cur=parseInt(APP_VERSION.slice(1));b.disabled=true;say('Buscando…');
+  try{await reg.update();if(reg.installing||reg.waiting){say('Descargando…');setTimeout(hardRefresh,6000);return}
+    const r=await fetch('sw.js?u='+Date.now(),{cache:'no-store'});const m=(await r.text()).match(/sin-on-v(\d+)/);const live=m?+m[1]:0;
+    if(live>cur){say('Instalando v'+live+'…');setTimeout(hardRefresh,400);return}
+    say(live?'Ya tienes la última (v'+cur+')':'No pude revisar, ¿hay internet?')}
+  catch(_){say('No pude revisar, ¿hay internet?')}
+  setTimeout(()=>{say('Buscar actualización');b.disabled=false},2600)}
 Promise.all(SETS.map(k=>load(k)));
 sync();
 }
